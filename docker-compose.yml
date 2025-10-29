@@ -1,10 +1,11 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:18-alpine
     env_file: .env
     restart: always
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      # - ./pgdata:/var/lib/postgresql/data:z
+      - lw_pgdata:/var/lib/postgresql/data
   linkwarden:
     env_file: .env
     environment:
@@ -15,14 +16,27 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./data:/data/data
+      # - ./data:/data/data:z
+      - lw_data:/data/data:z
     depends_on:
       - postgres
       - meilisearch
   meilisearch:
-    image: getmeili/meilisearch:v1.12.8
+    # https://www.meilisearch.com/docs/learn/update_and_migration/updating
+    image: docker.io/getmeili/meilisearch:v1.24.0
     restart: always
     env_file:
       - .env
     volumes:
-      - ./meili_data:/meili_data
+      # - ./meili_data:/meili_data:z
+      - lw_meilidata:/meili_data
+
+
+# echo lw_data lw_pgdata lw_meilidata | xargs -n 1 podman volume create
+volumes:
+  lw_data:
+    external:
+  lw_pgdata:
+    external:
+  lw_meilidata:
+    external:
