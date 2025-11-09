@@ -1,12 +1,13 @@
 {
   "mcpServers": {
     "linkwarden": {
-      "command": "/root/.local/bin/linkwarden-mcp-server",
-      "args": ["stdio", "--read-only"],
-      "env": {
-        "LINKWARDEN_BASE_URL": "https://links.breitbandig.de",
-        "LINKWARDEN_TOKEN_dummy": "<dummy>"
-      }
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "supergateway",
+        "--sse",
+        "http://host.docker.internal:3034/sse"
+      ]
     },
     "vscode-mcp-server": {
       "command": "pnpm",
