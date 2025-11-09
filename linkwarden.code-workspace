@@ -1,0 +1,30 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"extensions": {
+		"recommendations": [
+			"loiane.ts-extension-pack",
+			"jawandarajbir.react-vscode-extension-pack",
+			"imgildev.vscode-next-pack",
+			"bradlc.vscode-tailwindcss",
+			"esbenp.prettier-vscode",
+			"dbaeumer.vscode-eslint",
+			"formulahendry.auto-rename-tag",
+			"formulahendry.auto-close-tag",
+			"christian-kohler.path-intellisense",
+			"eamodio.gitlens",
+			"sakamoto66.vscode-playwright-test-runner",
+			"vunguyentuan.vscode-postcss",
+			"JuehangQin.vscode-mcp-server",
+			"Anthropic.claude-code",
+			"saoudrizwan.claude-dev",
+			"Sixth.sixth-ai"
+		],
+		"unwantedRecommendations": [
+
+		]
+	}
+}
