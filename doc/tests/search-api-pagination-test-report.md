@@ -4,10 +4,19 @@
 
 **Date:** 2025-01-09
 **Endpoint:** `GET /api/v1/search`
-**Base URL:** https://links.breitbandig.de
-**Authentication:** Bearer token
+**Base URL:** `$LINKWARDEN_BASE_URL`
+**Authentication:** Bearer token from `$LINKWARDEN_TOKEN`
 **Test Method:** curl + bash
 **Dataset:** Production instance with 2000+ links
+
+## Environment Variables
+
+Set these variables before running the tests:
+
+```bash
+export LINKWARDEN_BASE_URL="https://your-instance.com"
+export LINKWARDEN_TOKEN="your_bearer_token_here"
+```
 
 ## Test Results Summary
 
@@ -31,7 +40,16 @@
 
 **Request:**
 ```bash
-GET /api/v1/search?cursor=0&sort=0
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=0&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq '{
+    success: .success,
+    message: .message,
+    linkCount: (.data.links | length),
+    nextCursor: .data.nextCursor,
+    firstLink: (.data.links[0] | {id, name, url}),
+    lastLink: (.data.links[-1] | {id, name, url})
+  }'
 ```
 
 **Response:**
@@ -63,7 +81,16 @@ GET /api/v1/search?cursor=0&sort=0
 
 **Request:**
 ```bash
-GET /api/v1/search?cursor=2920&sort=0
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=2920&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq '{
+    success: .success,
+    message: .message,
+    linkCount: (.data.links | length),
+    nextCursor: .data.nextCursor,
+    firstLink: (.data.links[0] | {id, name, url}),
+    lastLink: (.data.links[-1] | {id, name, url})
+  }'
 ```
 
 **Response:**
@@ -96,7 +123,15 @@ GET /api/v1/search?cursor=2920&sort=0
 
 **Request:**
 ```bash
-GET /api/v1/search?cursor=2870&sort=0
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=2870&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq -c '{
+    page: 3,
+    linkCount: (.data.links | length),
+    nextCursor: .data.nextCursor,
+    firstId: .data.links[0].id,
+    lastId: .data.links[-1].id
+  }'
 ```
 
 **Response:**
@@ -118,7 +153,15 @@ GET /api/v1/search?cursor=2870&sort=0
 
 **Request:**
 ```bash
-GET /api/v1/search?sort=2
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?sort=2" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq -c '{
+    sort: "NameAZ",
+    linkCount: (.data.links | length),
+    firstLink: .data.links[0].name,
+    lastLink: .data.links[-1].name,
+    nextCursor: .data.nextCursor
+  }'
 ```
 
 **Response:**
@@ -142,7 +185,14 @@ GET /api/v1/search?sort=2
 
 **Request:**
 ```bash
-GET /api/v1/search?searchQueryString=docker&sort=0
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?searchQueryString=docker&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq '{
+    search: "docker",
+    linkCount: (.data.links | length),
+    nextCursor: .data.nextCursor,
+    sampleLinks: [.data.links[0].name, .data.links[1].name, .data.links[2].name]
+  }'
 ```
 
 **Response:**
@@ -170,7 +220,14 @@ GET /api/v1/search?searchQueryString=docker&sort=0
 
 **Request:**
 ```bash
-GET /api/v1/search?collectionId=5&sort=0
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?collectionId=5&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq '{
+    collection: "ai-scala (id=5)",
+    linkCount: (.data.links | length),
+    nextCursor: .data.nextCursor,
+    firstLink: .data.links[0].name
+  }'
 ```
 
 **Response:**
@@ -206,11 +263,34 @@ Used when search query is provided:
 
 ### Test 8: No Duplicates Verification
 
-**Test:**
+**Test Script:**
 ```bash
-# Page 1: Last ID = 2920
-# Page 2: First ID = 2919
-# NextCursor = 2920
+# Get page 1
+page1=$(curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=0&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json")
+
+nextCursor=$(echo "$page1" | jq -r '.data.nextCursor')
+lastIdPage1=$(echo "$page1" | jq -r '.data.links[-1].id')
+
+# Get page 2
+page2=$(curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=$nextCursor&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json")
+
+firstIdPage2=$(echo "$page2" | jq -r '.data.links[0].id')
+
+echo "Last ID of page 1: $lastIdPage1"
+echo "First ID of page 2: $firstIdPage2"
+echo "NextCursor used: $nextCursor"
+
+if [ "$lastIdPage1" = "$nextCursor" ]; then
+  echo "✓ NextCursor matches last ID from page 1"
+fi
+
+if [ "$firstIdPage2" != "$lastIdPage1" ]; then
+  echo "✓ No duplicate: Page 2 starts with different ID"
+fi
 ```
 
 **Verification:**
@@ -338,28 +418,58 @@ The API behavior matches the documentation in `doc/api/search-links.md`:
 
 ## Test Commands Reference
 
+All commands use environment variables for URL and token. Set these first:
+
+```bash
+export LINKWARDEN_BASE_URL="https://your-instance.com"
+export LINKWARDEN_TOKEN="your_bearer_token_here"
+```
+
 ### Basic Pagination
 ```bash
-curl -X GET "https://links.breitbandig.de/api/v1/search?cursor=0&sort=0" \
-  -H "Authorization: Bearer TOKEN"
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=0&sort=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq
 ```
 
 ### Search with Pagination
 ```bash
-curl -X GET "https://links.breitbandig.de/api/v1/search?searchQueryString=docker&cursor=0" \
-  -H "Authorization: Bearer TOKEN"
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?searchQueryString=docker&cursor=0" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq
 ```
 
 ### Filter by Collection
 ```bash
-curl -X GET "https://links.breitbandig.de/api/v1/search?collectionId=5" \
-  -H "Authorization: Bearer TOKEN"
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?collectionId=5" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq
 ```
 
 ### Sort by Name
 ```bash
-curl -X GET "https://links.breitbandig.de/api/v1/search?sort=2" \
-  -H "Authorization: Bearer TOKEN"
+curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?sort=2" \
+  -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+  -H "Content-Type: application/json" | jq
+```
+
+### Complete Pagination Loop
+```bash
+cursor=0
+while [ "$cursor" != "null" ]; do
+  response=$(curl -s -X GET "${LINKWARDEN_BASE_URL}/api/v1/search?cursor=$cursor&sort=0" \
+    -H "Authorization: Bearer ${LINKWARDEN_TOKEN}" \
+    -H "Content-Type: application/json")
+
+  echo "$response" | jq -c '{linkCount: (.data.links | length), nextCursor: .data.nextCursor}'
+
+  cursor=$(echo "$response" | jq -r '.data.nextCursor')
+
+  # Safety: break if cursor becomes 0 or empty
+  if [ "$cursor" = "0" ] || [ -z "$cursor" ]; then
+    break
+  fi
+done
 ```
 
 ## Conclusion
