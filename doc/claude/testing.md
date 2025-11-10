@@ -74,9 +74,9 @@ apps/web/lib/api/utils/
 
 ## Existing Tests
 
-### Pagination Utility Tests (52 total)
+### Pagination Utility Tests (76 total)
 
-#### Sorting Tests (26 tests)
+#### Sorting Tests (50 tests)
 
 Located in: `apps/web/lib/api/utils/__tests__/sorting.test.ts`
 
@@ -96,6 +96,33 @@ Located in: `apps/web/lib/api/utils/__tests__/sorting.test.ts`
 **`orderByToString()` - 5 tests:**
 - ✅ Debug output formatting
 - ✅ Single and multi-column conversion
+
+**Multi-column Sorting Integration - 24 tests:**
+- ✅ Two-column combinations (5 tests)
+  - name asc/id desc, name desc/id asc
+  - createdAt desc/name asc
+  - Both ascending, both descending
+- ✅ Three-column combinations (4 tests)
+  - createdAt desc/name asc/id desc
+  - All ascending, all descending, mixed directions
+- ✅ Four-column combinations (2 tests)
+  - Mixed directions, direction reuse
+- ✅ Direction count edge cases (3 tests)
+  - More directions than columns
+  - Single direction for multiple columns
+  - No direction specified
+- ✅ Whitelist filtering with multi-column (3 tests)
+  - Filter invalid columns from middle
+  - Filter multiple invalid columns
+  - Preserve valid column order
+- ✅ Real-world scenarios (3 tests)
+  - Tag sorting (name asc, id desc)
+  - Collection sorting (createdAt desc, name asc)
+  - User sorting (name asc, email asc, id asc)
+- ✅ Stability and consistency (4 tests)
+  - Idempotent results
+  - Always includes id for cursor stability
+  - No duplicate id columns
 
 #### Pagination Tests (26 tests)
 

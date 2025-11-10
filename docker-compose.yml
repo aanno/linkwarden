@@ -12,7 +12,8 @@ services:
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
     restart: always
     # build: . # uncomment to build from source
-    image: localhost/linkwarden:get-tags-pagination # comment to build from source
+    image: localhost/linkwarden:get-tags-pagination
+    # image: ghcr.io/linkwarden/linkwarden:latest
     ports:
       - 3000:3000
     volumes:

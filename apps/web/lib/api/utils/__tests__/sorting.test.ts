@@ -195,3 +195,267 @@ describe('orderByToString', () => {
     expect(result).toBe('name ASC, createdAt DESC, id DESC');
   });
 });
+
+describe('Multi-column sorting integration', () => {
+  describe('Two-column combinations', () => {
+    it('should handle name asc, id desc', () => {
+      const result = parseSort('name,id', 'asc,desc');
+      expect(result).toEqual([
+        { name: 'asc' },
+        { id: 'desc' }
+      ]);
+      expect(orderByToString(result)).toBe('name ASC, id DESC');
+    });
+
+    it('should handle name desc, id asc', () => {
+      const result = parseSort('name,id', 'desc,asc');
+      expect(result).toEqual([
+        { name: 'desc' },
+        { id: 'asc' }
+      ]);
+      expect(orderByToString(result)).toBe('name DESC, id ASC');
+    });
+
+    it('should handle createdAt desc, name asc', () => {
+      const result = parseSort('createdAt,name', 'desc,asc');
+      expect(result).toEqual([
+        { createdAt: 'desc' },
+        { name: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle both columns ascending', () => {
+      const result = parseSort('name,createdAt', 'asc,asc');
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle both columns descending', () => {
+      const result = parseSort('name,createdAt', 'desc,desc');
+      expect(result).toEqual([
+        { name: 'desc' },
+        { createdAt: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+  });
+
+  describe('Three-column combinations', () => {
+    it('should handle createdAt desc, name asc, id desc', () => {
+      const result = parseSort('createdAt,name,id', 'desc,asc,desc');
+      expect(result).toEqual([
+        { createdAt: 'desc' },
+        { name: 'asc' },
+        { id: 'desc' }
+      ]);
+      expect(orderByToString(result)).toBe('createdAt DESC, name ASC, id DESC');
+    });
+
+    it('should handle all three ascending', () => {
+      const result = parseSort('name,createdAt,updatedAt', 'asc,asc,asc');
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'asc' },
+        { updatedAt: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle all three descending', () => {
+      const result = parseSort('name,createdAt,updatedAt', 'desc,desc,desc');
+      expect(result).toEqual([
+        { name: 'desc' },
+        { createdAt: 'desc' },
+        { updatedAt: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle mixed directions', () => {
+      const result = parseSort('name,createdAt,updatedAt', 'asc,desc,asc');
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'desc' },
+        { updatedAt: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+  });
+
+  describe('Four-column combinations', () => {
+    it('should handle four columns with mixed directions', () => {
+      const result = parseSort(
+        'name,createdAt,updatedAt,ownerId',
+        'asc,desc,asc,desc'
+      );
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'desc' },
+        { updatedAt: 'asc' },
+        { ownerId: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle four columns with only two directions (reuse last)', () => {
+      const result = parseSort(
+        'name,createdAt,updatedAt,ownerId',
+        'asc,desc'
+      );
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'desc' },
+        { updatedAt: 'desc' },
+        { ownerId: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+  });
+
+  describe('Direction count edge cases', () => {
+    it('should handle more directions than columns', () => {
+      const result = parseSort('name,createdAt', 'asc,desc,asc,desc');
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle single direction for multiple columns', () => {
+      const result = parseSort('name,createdAt,updatedAt', 'desc');
+      expect(result).toEqual([
+        { name: 'desc' },
+        { createdAt: 'desc' },
+        { updatedAt: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle no direction for multiple columns', () => {
+      const result = parseSort('name,createdAt,updatedAt');
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'asc' },
+        { updatedAt: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+  });
+
+  describe('Whitelist filtering with multi-column', () => {
+    it('should filter out invalid columns from middle', () => {
+      const result = parseSort(
+        'name,invalidCol,createdAt',
+        'asc,desc,asc',
+        ['name', 'createdAt', 'id']
+      );
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should filter out multiple invalid columns', () => {
+      const result = parseSort(
+        'name,badCol1,createdAt,badCol2,id',
+        'asc,desc,asc,desc,asc',
+        ['name', 'createdAt', 'id']
+      );
+      expect(result).toEqual([
+        { name: 'asc' },
+        { createdAt: 'asc' },
+        { id: 'asc' }
+      ]);
+    });
+
+    it('should preserve only valid columns and maintain their order', () => {
+      const result = parseSort(
+        'malicious,name,dangerous,createdAt',
+        'asc,desc,asc,desc',
+        ['name', 'createdAt', 'updatedAt', 'id']
+      );
+      expect(result).toEqual([
+        { name: 'desc' },
+        { createdAt: 'desc' },
+        { id: 'desc' }
+      ]);
+    });
+  });
+
+  describe('Real-world scenarios', () => {
+    it('should handle typical tag sorting (name asc, id desc)', () => {
+      const result = parseSort(
+        'name,id',
+        'asc,desc',
+        ['name', 'id', 'createdAt']
+      );
+      expect(result).toEqual([
+        { name: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle collection sorting (createdAt desc, name asc)', () => {
+      const result = parseSort(
+        'createdAt,name',
+        'desc,asc',
+        ['name', 'createdAt', 'id']
+      );
+      expect(result).toEqual([
+        { createdAt: 'desc' },
+        { name: 'asc' },
+        { id: 'desc' }
+      ]);
+    });
+
+    it('should handle user sorting (name asc, email asc, id asc)', () => {
+      const result = parseSort(
+        'name,email,id',
+        'asc,asc,asc',
+        ['name', 'email', 'id']
+      );
+      expect(result).toEqual([
+        { name: 'asc' },
+        { email: 'asc' },
+        { id: 'asc' }
+      ]);
+    });
+  });
+
+  describe('Stability and consistency', () => {
+    it('should produce same result when called multiple times', () => {
+      const result1 = parseSort('name,createdAt', 'asc,desc');
+      const result2 = parseSort('name,createdAt', 'asc,desc');
+      expect(result1).toEqual(result2);
+    });
+
+    it('should always include id for cursor stability', () => {
+      const result1 = parseSort('name');
+      const result2 = parseSort('name,createdAt');
+      const result3 = parseSort('name,createdAt,updatedAt');
+
+      expect(result1.some(obj => 'id' in obj)).toBe(true);
+      expect(result2.some(obj => 'id' in obj)).toBe(true);
+      expect(result3.some(obj => 'id' in obj)).toBe(true);
+    });
+
+    it('should not duplicate id when already at end', () => {
+      const result = parseSort('name,createdAt,id', 'asc,desc,asc');
+      const idCount = result.filter(obj => 'id' in obj).length;
+      expect(idCount).toBe(1);
+      expect(result[result.length - 1]).toEqual({ id: 'asc' });
+    });
+
+    it('should not duplicate id when already in middle', () => {
+      const result = parseSort('name,id,createdAt', 'asc,desc,asc');
+      const idCount = result.filter(obj => 'id' in obj).length;
+      expect(idCount).toBe(1);
+    });
+  });
+});
