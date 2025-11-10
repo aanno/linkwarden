@@ -21,16 +21,33 @@ const config = {
     '^@/(.*)$': '<rootDir>/$1',
   },
 
-  // Transform files
+  // Transform files with ts-jest
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react',
-        esModuleInterop: true,
-        moduleResolution: 'node',
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          jsx: 'react',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          moduleResolution: 'node',
+          resolveJsonModule: true,
+          isolatedModules: true,
+          // Allow 'as any' and other TypeScript features
+          strict: false,
+        },
+        // Use Babel to parse TypeScript
+        babelConfig: false,
+        // Disable type checking for faster tests (optional)
+        isolatedModules: true,
       },
-    }],
+    ],
   },
+
+  // Transform ESM modules from node_modules if needed
+  transformIgnorePatterns: [
+    'node_modules/(?!(@linkwarden)/)',
+  ],
 
   // Coverage configuration
   collectCoverageFrom: [
@@ -61,6 +78,16 @@ const config = {
 
   // Verbose output
   verbose: true,
+
+  // Handle module file extensions
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+
+  // Globals for ts-jest
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
+  },
 };
 
 module.exports = config;
