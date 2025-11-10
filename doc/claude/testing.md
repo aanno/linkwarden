@@ -8,13 +8,26 @@ Linkwarden uses **Jest** with **ts-jest** for unit testing TypeScript code.
 
 ## Running Tests
 
-### Quick Commands
+### From Workspace Root (`/workspaces/linkwarden`)
+
+```bash
+# Run all web tests
+yarn test
+
+# Run tests in watch mode (auto-rerun on file changes)
+yarn web:test:watch
+
+# Run tests with coverage report
+yarn web:test:coverage
+```
+
+### From Web App Directory (`/workspaces/linkwarden/apps/web`)
 
 ```bash
 # Run all tests
 yarn jest
 
-# Run tests in watch mode (auto-rerun on file changes)
+# Run tests in watch mode
 yarn jest --watch
 
 # Run tests with coverage report
@@ -23,6 +36,8 @@ yarn jest --coverage
 # List which tests will be run
 yarn jest --listTests
 ```
+
+**Note:** The monorepo uses yarn workspaces. The root `package.json` delegates to the web workspace, so you can run tests from either location.
 
 ### Test-Specific Commands
 
