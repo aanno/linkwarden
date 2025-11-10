@@ -10,15 +10,52 @@ This document analyzes the current pagination implementation across all Linkward
 4. Includes search/filter parameters
 5. Provides reusable utility functions to eliminate code duplication
 
+## Critical Clarifications
+
+**1. Why does Meilisearch fallback exist?**
+- Meilisearch is optional (might not be configured)
+- Provides advanced query syntax: `url:github.com tag:react !pinned:true before:2024-01-01`
+- Falls back to Prisma when Meilisearch unavailable OR no searchQueryString provided
+- Dual pagination: Offset (Meilisearch) vs Cursor (Prisma fallback)
+
+**2. Does Meilisearch support search_after?**
+- **NO.** Meilisearch does NOT support search_after or cursor-based pagination
+- Only supports offset/limit and page/hitsPerPage
+- Cursor pagination exists only for Meilisearch tasks API, not search results
+- Performance degrades beyond ~1000 offset (documented limitation)
+
+**3. Two types of search - DO NOT confuse them:**
+- **Basic LIKE search** (new for tags/collections/users): Simple `search=value` parameter, SQL CONTAINS behavior
+- **Advanced Meilisearch search** (existing in /api/v1/search): `searchQueryString` with token syntax
+- These are completely different! Do not mix them up!
+
+**4. Deprecated endpoint:**
+- `/api/v1/links` is **DEPRECATED** (replaced by `/api/v1/search`)
+- Will NOT be improved or migrated
+- Excluded from this analysis
+
+**5. Public endpoint clarification:**
+- `/api/v1/public/collections/links` EXISTS and uses searchLinks controller
+- Included in pagination analysis
+
+**6. Single-item endpoints excluded:**
+- `/api/v1/links/[id]`, `/api/v1/collections/[id]`, `/api/v1/users/[id]`, etc.
+- These return single items, not lists
+- Not relevant to pagination analysis
+
 ## Current State Analysis
 
-### Endpoints with Pagination (3 endpoints)
+### Endpoints with Pagination (2 endpoints)
 
-| Endpoint | Controller | Pagination | Sort | Limit |
-|----------|-----------|------------|------|-------|
-| `/api/v1/search` | searchLinks.ts | Cursor (ID or offset) | Enum 0-3 | Env var (50) |
-| `/api/v1/links` | getLinks.ts | Cursor (ID) | Enum 0-3 | Env var (50) |
-| `/api/v1/public/collections/links` | searchLinks.ts | Cursor (ID or offset) | Enum 0-3 | Env var (50) |
+| Endpoint | Controller | Pagination | Sort | Search Type | Limit |
+|----------|-----------|------------|------|-------------|-------|
+| `/api/v1/search` | searchLinks.ts | Dual mode* | Enum 0-3 | Advanced** | Env var (50) |
+| `/api/v1/public/collections/links` | searchLinks.ts | Dual mode* | Enum 0-3 | Advanced** | Env var (50) |
+
+**Notes:**
+- *Dual mode: Offset-based (Meilisearch) OR cursor-based (Prisma fallback)
+- **Advanced search: Meilisearch query syntax (url:, tag:, name:, before:, after:, etc.) OR basic CONTAINS fallback
+- `/api/v1/links` is **deprecated** (replaced by `/api/v1/search`) and will NOT be improved
 
 **Current Sort Enum:**
 ```typescript
@@ -30,39 +67,76 @@ export enum Sort {
 }
 ```
 
-**Current Pagination Pattern:**
+**Dual Pagination Implementation (searchLinks.ts):**
+
+The search endpoint uses **two different pagination strategies** depending on whether Meilisearch is available:
+
 ```typescript
-// Cursor-based (Prisma native)
+// MODE 1: Meilisearch (when configured AND searchQueryString provided)
+// Uses OFFSET-based pagination
+if (meiliClient && query.searchQueryString) {
+  const limit = paginationTakeCount;
+  const offset = query.cursor || 0; // cursor is actually an offset!
+
+  const meiliResp = await meiliClient.index("links").search(meiliQuery, {
+    filter: meiliFilters,
+    limit,
+    offset, // Offset-based pagination
+    sort: [/* sort mapping */],
+  });
+
+  const nextCursor = meiliResp.hits.length === limit ? offset + limit : null;
+  // Returns: { links, nextCursor: 50 } then { links, nextCursor: 100 } etc.
+}
+
+// MODE 2: Prisma Fallback (when no Meilisearch OR no searchQueryString)
+// Uses CURSOR-based pagination
 const links = await prisma.link.findMany({
-  take: Number(process.env.PAGINATION_TAKE_COUNT) || 50,
+  take: paginationTakeCount,
   skip: query.cursor ? 1 : undefined,
-  cursor: query.cursor ? { id: query.cursor } : undefined,
+  cursor: query.cursor ? { id: query.cursor } : undefined, // ID-based cursor!
   orderBy: order,
 });
 
-// Offset-based (Meilisearch fallback)
-const results = await searchLinks({
-  offset: cursor,
-  limit: take,
-});
+const nextCursor = links.length === paginationTakeCount
+  ? links[links.length - 1].id
+  : null;
+// Returns: { links, nextCursor: 2920 } then { links, nextCursor: 2870 } etc.
 ```
 
-### Endpoints WITHOUT Pagination (9 endpoints)
+**Why Meilisearch Fallback Exists:**
+
+1. **Optional Dependency:** Meilisearch is not always configured (meiliClient may be null)
+2. **Performance:** Meilisearch provides better full-text search than SQL LIKE
+3. **Advanced Queries:** Meilisearch supports structured query syntax (see below)
+4. **Simple Filtering:** When no search query, just filtering by collection/tag/pinned, Prisma is sufficient
+
+**Meilisearch Limitations:**
+
+- **No cursor pagination:** Meilisearch only supports offset/limit and page/hitsPerPage
+- **No search_after:** Unlike Elasticsearch, Meilisearch does NOT support cursor-based search_after
+- **Offset performance:** Recommended max offset is ~1000 hits (performance degrades beyond this)
+- **Tasks API only:** Cursor pagination exists only for Meilisearch tasks API, not search results
+
+### Endpoints WITHOUT Pagination (7 list endpoints)
 
 | Endpoint | Controller | Returns | Current Issue |
 |----------|-----------|---------|---------------|
-| `/api/v1/collections` | getCollections.ts | All collections | No pagination, no sorting |
+| `/api/v1/collections` | getCollections.ts | All collections | No pagination, no sorting, no search |
 | `/api/v1/tags` | getTags.ts | All tags | No pagination, no sorting, no search |
 | `/api/v1/users` | getUsers.ts | All users | No pagination, client-side sort |
 | `/api/v1/tokens` | getTokens.ts | All tokens | No pagination, no sorting |
 | `/api/v1/dashboard` | getDashboardData.ts | Top 10 each | Hardcoded limit, no pagination |
 | `/api/v1/links/[id]/highlights` | getLinkHighlights.ts | All highlights | No pagination, no sorting |
 | `/api/v1/public/collections/tags` | getTags.ts | All tags | No pagination, no sorting, no search |
-| `/api/v1/public/collections/[id]` | getPublicCollection.ts | Single item | N/A (not a list) |
-| `/api/v1/rss/[id]` | (RSS feed) | Feed items | Special case |
+
+**Excluded from Analysis:**
+- `/api/v1/links` - **DEPRECATED** endpoint (replaced by `/api/v1/search`)
+- `/api/v1/collections/[id]`, `/api/v1/links/[id]`, `/api/v1/users/[id]` - Single-item GET endpoints
+- `/api/v1/rss/[id]` - RSS feed (special case, different format)
 
 **Severity Assessment:**
-- **Critical** (>1000 records expected): tags, collections
+- **Critical** (>1000 records expected): tags (6000+ on production), collections
 - **High** (>100 records expected): users (enterprise), tokens, highlights
 - **Medium** (<100 records expected): dashboard (fixed at 10)
 
@@ -84,10 +158,11 @@ const results = await searchLinks({
    - No per-request limit override
    - Dashboard hardcodes `take: 10`
 
-4. **Missing Search/Filter:**
-   - Tags endpoint has no name search
-   - Collections endpoint has no name search
-   - Users endpoint has no username/email search
+4. **Missing Basic Search/Filter:**
+   - Tags endpoint has no name search (simple LIKE filter)
+   - Collections endpoint has no name search (simple LIKE filter)
+   - Users endpoint has no username/email search (simple LIKE filter)
+   - Note: This is different from the advanced Meilisearch search in /api/v1/search
 
 5. **Code Duplication:**
    - Sort enum → Prisma Order mapping repeated in multiple files
@@ -215,6 +290,50 @@ function parseSortWithLegacy(
 
 ### Search/Filter Parameters
 
+**IMPORTANT: Two Types of Search**
+
+Linkwarden has **two completely different search implementations**:
+
+1. **Basic LIKE Search** (proposed for tags, collections, users, etc.)
+   - Simple SQL CONTAINS/LIKE '%value%' filtering
+   - Single parameter: `search=value`
+   - Filters by primary text field (name, username, email, etc.)
+   - Example: `/api/v1/tags?search=react` → filters tags where name contains "react"
+
+2. **Advanced Meilisearch Search** (existing in /api/v1/search)
+   - Full-text search with query syntax
+   - Parameter: `searchQueryString=query`
+   - Supports structured queries: `url:github.com tag:react !pinned:true before:2024-01-01`
+   - Falls back to Prisma CONTAINS if Meilisearch not configured
+   - Example: `/api/v1/search?searchQueryString=url:github.com tag:react`
+
+**Do NOT mix these up!** The simple `search` parameter for basic endpoints is completely different from `searchQueryString` for the search endpoint.
+
+**Meilisearch Query Syntax (searchQueryString only):**
+
+Supported tokens in searchLinks.ts (lines 7-18 in searchQueryBuilder.ts):
+- `url:value` - Filter by URL
+- `name:value` - Filter by link name
+- `description:value` - Filter by description
+- `tag:value` - Filter by tag name
+- `collection:value` - Filter by collection name
+- `type:value` - Filter by link type
+- `pinned:true/false` - Filter by pinned status
+- `public:true/false` - Filter by public status
+- `before:date` - Created before date
+- `after:date` - Created after date
+- `!token` - Negate any token (e.g., `!pinned:true`)
+- General text (no prefix) - Full-text search across all fields
+
+Example queries:
+```
+url:github.com tag:react
+!pinned:true before:2024-01-01
+tag:typescript !collection:archive
+```
+
+**Basic Search Implementation (New Endpoints):**
+
 **By Endpoint:**
 
 | Endpoint | Search Parameter | Behavior |
@@ -222,22 +341,24 @@ function parseSortWithLegacy(
 | `/api/v1/tags` | `search=react` | Filter tags where `name` contains "react" (case-insensitive) |
 | `/api/v1/collections` | `search=work` | Filter collections where `name` contains "work" (case-insensitive) |
 | `/api/v1/users` | `search=john` | Filter users where `username` OR `email` contains "john" |
-| `/api/v1/search` | `searchQueryString` | Advanced syntax (url:, name:, description:, etc.) |
-| `/api/v1/links` | `searchQueryString` | Advanced syntax (same as search) |
+| `/api/v1/search` | `searchQueryString=url:...` | **Advanced Meilisearch syntax** (DO NOT CHANGE) |
 
 **Implementation Example (Tags):**
 
 ```typescript
 // In getTags controller
+const POSTGRES_IS_ENABLED = process.env.DATABASE_URL?.startsWith("postgresql");
+
 const whereClause = {
   OR: [
     { ownerId: userId },
     { links: { some: { collection: { members: { some: { userId } } } } } }
   ],
+  // Basic LIKE search
   ...(params.search && {
     name: {
       contains: params.search,
-      mode: 'insensitive' as const,
+      mode: POSTGRES_IS_ENABLED ? 'insensitive' : undefined,
     }
   }),
   ...(params.collectionId && {
@@ -778,18 +899,22 @@ Apply same pattern to:
 - `/api/v1/links/[id]/highlights` (getLinkHighlights)
 - `/api/v1/public/collections/tags` (public getTags)
 
-### Phase 5: Refactor Search/Links (Week 5)
+### Phase 5: Optionally Refactor Search Endpoint (Week 5) - OPTIONAL
 
-**More complex due to Meilisearch integration:**
+**NOTE:** This phase is OPTIONAL. The search endpoint (/api/v1/search) is complex and working correctly.
+
+**If refactoring is desired:**
 
 1. Keep dual pagination modes (offset for Meilisearch, cursor for Prisma)
-2. Add column-based sorting support
-3. Maintain backward compatibility with existing enum-based sorting
-4. Update `searchLinks.ts` and `getLinks.ts` to use new utilities
+2. Add column-based sorting support (backward compatible with enum)
+3. Extract common logic to use new utilities
+4. **DO NOT change** the Meilisearch query syntax or `searchQueryString` parameter
+5. **DO NOT change** the dual pagination behavior
 
-**Example for searchLinks:**
+**Example for searchLinks.ts (Prisma fallback only):**
 
 ```typescript
+// In Prisma fallback section (lines 155-256)
 // Parse sort with legacy support
 const orderBy = parseSortWithLegacy(
   query.sort,
@@ -797,15 +922,23 @@ const orderBy = parseSortWithLegacy(
   ['name', 'id', 'createdAt', 'updatedAt']
 );
 
-// Use in Prisma query
+// Use in Prisma query (existing code)
 const links = await prisma.link.findMany({
-  take: query.limit || Number(process.env.PAGINATION_TAKE_COUNT) || 50,
+  take: paginationTakeCount,
   skip: query.cursor ? 1 : undefined,
   cursor: query.cursor ? { id: query.cursor } : undefined,
-  orderBy,
+  orderBy, // Use parsed order instead of manual mapping
   // ... rest of query
 });
 ```
+
+**Meilisearch section (lines 54-153) should NOT change:**
+- Keep offset-based pagination
+- Keep existing sort mapping
+- Keep `searchQueryString` and token parsing
+- Keep all Meilisearch-specific logic intact
+
+**Recommendation:** Skip this phase initially. Focus on simpler endpoints first (tags, collections, users). Only refactor search endpoint if there's a strong need for column-based sorting.
 
 ### Phase 6: Update Documentation (Week 6)
 
@@ -1232,11 +1365,22 @@ try {
 
 **Problem:** Offset-based pagination becomes slow for large offsets (e.g., page 1000).
 
-**Solution:** Cursor-based pagination is already efficient, but for Meilisearch:
+**Solution:**
 
-- Consider using `search_after` if Meilisearch supports it
-- Limit maximum cursor value
-- Document that deep pagination is not recommended (use search instead)
+**For Prisma endpoints (tags, collections, users, etc.):**
+- Cursor-based pagination is efficient regardless of dataset size
+- No performance degradation at high offsets
+- Recommended approach for all new endpoints
+
+**For Meilisearch (search endpoint):**
+- **Meilisearch does NOT support search_after or cursor-based pagination**
+- Offset-based is the only option (offset/limit or page/hitsPerPage)
+- Performance degrades beyond ~1000 hits offset
+- Mitigation strategies:
+  - Limit maximum offset (e.g., `MAX_OFFSET=1000`)
+  - Document that deep pagination is not recommended
+  - Encourage users to refine search queries instead of paginating deeply
+  - Return error message when offset exceeds limit
 
 ### 4. Ordering by _count
 
@@ -1360,16 +1504,24 @@ This unified pagination system will:
 ✅ Scale to handle large datasets (6000+ tags, 2000+ links)
 
 **Estimated Implementation Time:**
-- Utilities + Tests: 1 week
-- Tags Migration: 1 week
-- Collections Migration: 1 week
-- Other Endpoints: 1 week
-- Search/Links Refactor: 1 week
-- Documentation: 1 week
-- **Total: 6 weeks**
+- Phase 1 (Utilities + Tests): 1 week
+- Phase 2 (Tags Migration): 1 week
+- Phase 3 (Collections Migration): 1 week
+- Phase 4 (Other Endpoints): 1 week
+- Phase 5 (Search Refactor): OPTIONAL - Skip initially
+- Phase 6 (Documentation): 1 week
+- **Total: 5 weeks** (6 weeks if including optional search refactor)
+
+**Priority Order:**
+1. **Critical:** Tags endpoint (6000+ records on production)
+2. **High:** Collections endpoint (many users have 100+ collections)
+3. **Medium:** Users, tokens, highlights (important for enterprise/power users)
+4. **Low:** Dashboard (fixed at 10 items, pagination not critical)
+5. **Skip:** Search endpoint refactor (working correctly, complex, low ROI)
 
 **Next Steps:**
 1. Review and approve this design
 2. Create GitHub issues for each phase
 3. Assign developers to phases
 4. Begin Phase 1 (utilities implementation)
+5. Test thoroughly on production-like datasets (thousands of tags/collections)
