@@ -2,28 +2,29 @@ services:
   postgres:
     image: docker.io/library/postgres:18-alpine
     ports:
-      - 5432:5432
+      - 5434:5432
     env_file: .env
     restart: always
     volumes:
       # - ./pgdata:/var/lib/postgresql/data:z
       - lw_pgdata:/var/lib/postgresql/data
-  linkwarden:
-    env_file: .env
-    environment:
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
-    restart: always
-    # build: . # uncomment to build from source
-    image: localhost/linkwarden:get-tags-pagination
-    # image: ghcr.io/linkwarden/linkwarden:latest
-    ports:
-      - 3000:3000
-    volumes:
-      # - ./data:/data/data:z
-      - lw_data:/data/data:z
-    depends_on:
-      - postgres
-      - meilisearch
+  # linkwarden:
+  #   env_file: .env
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+  #     - MEILI_HOST=meilisearch:7700
+  #   restart: always
+  #   # build: . # uncomment to build from source
+  #   image: localhost/linkwarden:get-tags-pagination
+  #   # image: ghcr.io/linkwarden/linkwarden:latest
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     # - ./data:/data/data:z
+  #     - lw_data:/data/data:z
+  #   depends_on:
+  #     - postgres
+  #     - meilisearch
   meilisearch:
     # https://www.meilisearch.com/docs/learn/update_and_migration/updating
     image: docker.io/getmeili/meilisearch:v1.24.0
