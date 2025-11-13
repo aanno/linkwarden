@@ -9,6 +9,14 @@
         "http://host.docker.internal:3034/sse"
       ]
     },
+    "chrome-mcp-stdio": {
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "node",
+        "/root/.local/share/pnpm/global/5/node_modules/mcp-chrome-bridge/dist/mcp/mcp-server-stdio.js"
+      ]
+    },
     "vscode-mcp-server": {
       "command": "pnpm",
       "args": [
