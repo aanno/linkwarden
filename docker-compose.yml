@@ -1,6 +1,8 @@
 services:
   postgres:
     image: docker.io/library/postgres:18-alpine
+    ports:
+      - 5432:5432
     env_file: .env
     restart: always
     volumes:
@@ -25,6 +27,8 @@ services:
   meilisearch:
     # https://www.meilisearch.com/docs/learn/update_and_migration/updating
     image: docker.io/getmeili/meilisearch:v1.24.0
+    ports:
+      - 7700:7700
     restart: always
     env_file:
       - .env
