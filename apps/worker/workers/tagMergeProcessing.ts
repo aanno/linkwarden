@@ -1,5 +1,6 @@
 import { prisma } from "@linkwarden/prisma";
 import { delay } from "@linkwarden/lib";
+import { performTagMerge } from "../../web/lib/api/controllers/tags/mergeTags";
 
 const TAG_MERGE_BATCH_SIZE = Number(process.env.TAG_MERGE_BATCH_SIZE || "") || 5;
 
@@ -43,60 +44,31 @@ export async function tagMergeProcessing(interval = 10) {
             data: { status: "PROCESSING" },
           });
 
-          // Execute the merge operation
-          // Find all links associated with tags to be merged
-          const affectedLinks = (
-            await prisma.link.findMany({
-              where: {
-                tags: {
-                  some: {
-                    id: {
-                      in: job.tagIds,
-                    },
-                    ownerId: job.userId,
-                  },
-                },
+          // Fetch aiSuggestionCount values from tags to be merged
+          const tagsToMerge = await prisma.tag.findMany({
+            where: {
+              ownerId: job.userId,
+              id: {
+                in: job.tagIds,
               },
-              select: {
-                id: true,
-              },
-            })
-          ).map((link) => link.id);
+            },
+            select: {
+              aiSuggestionCount: true,
+            },
+          });
 
-          // Perform atomic merge operation
-          await prisma.$transaction(async (tx) => {
-            // Delete old tags
-            await tx.tag.deleteMany({
-              where: {
-                ownerId: job.userId,
-                id: {
-                  in: job.tagIds,
-                },
-              },
-            });
+          // Sum up the aiSuggestionCount values
+          const totalSuggestionCount = tagsToMerge.reduce(
+            (sum, tag) => sum + tag.aiSuggestionCount,
+            0
+          );
 
-            // Create new tag with all affected links
-            await tx.tag.create({
-              data: {
-                name: job.newTagName,
-                ownerId: job.userId,
-                links: {
-                  connect: affectedLinks.map((id) => ({ id })),
-                },
-              },
-            });
-
-            // Invalidate search index for affected links
-            await tx.link.updateMany({
-              where: {
-                id: {
-                  in: affectedLinks,
-                },
-              },
-              data: {
-                indexVersion: null,
-              },
-            });
+          // Perform the merge using shared function
+          await performTagMerge({
+            userId: job.userId,
+            tagIds: job.tagIds,
+            newTagName: job.newTagName,
+            aiSuggestionCount: totalSuggestionCount,
           });
 
           // Mark job as completed

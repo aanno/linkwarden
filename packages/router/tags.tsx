@@ -361,14 +361,32 @@ const useSubmitAiMerges = () => {
       const responseData = await response.json();
       if (!response.ok) throw new Error(responseData.response);
 
-      return responseData.response;
+      return { response: responseData.response, requestBody: body };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Optimistically update the suggestions cache by removing merged items
+      const mergedTagIds = new Set<number>();
+      data.requestBody.merges.forEach(merge => {
+        merge.tagIds.forEach(id => mergedTagIds.add(id));
+      });
+
+      queryClient.setQueryData<AiMergeSuggestionsResponse>(
+        ["ai-merge-suggestions"],
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          const updatedSuggestions = oldData.suggestions.filter((suggestion) => {
+            // Remove suggestion if any of its tags are being merged
+            return !suggestion.tags.some(tag => mergedTagIds.has(tag.id));
+          });
+
+          return { suggestions: updatedSuggestions };
+        }
+      );
+
       // Invalidate tags to refresh the list
       queryClient.invalidateQueries({ queryKey: ["tags-paginated"] });
       queryClient.invalidateQueries({ queryKey: ["links"] });
-      // Invalidate suggestions to regenerate after merge
-      queryClient.invalidateQueries({ queryKey: ["ai-merge-suggestions"] });
     },
   });
 };

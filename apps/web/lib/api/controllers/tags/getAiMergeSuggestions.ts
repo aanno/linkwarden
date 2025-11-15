@@ -192,6 +192,24 @@ export default async function getAiMergeSuggestions(userId: number) {
       };
     }).filter(Boolean); // Remove null suggestions
 
+    // Increment ai_suggestion_count for all tags that appear in suggestions
+    const tagIdsInSuggestions = new Set<number>();
+    (suggestions as Array<NonNullable<typeof suggestions[number]>>).forEach((suggestion) => {
+      suggestion.tags.forEach((tag) => {
+        if (tag) {
+          tagIdsInSuggestions.add(tag.id);
+        }
+      });
+    });
+
+    if (tagIdsInSuggestions.size > 0) {
+      await prisma.$executeRaw`
+        UPDATE "Tag"
+        SET "aiSuggestionCount" = "aiSuggestionCount" + 1
+        WHERE "id" = ANY(${Array.from(tagIdsInSuggestions)}::int[])
+      `;
+    }
+
     return {
       response: { suggestions },
       status: 200,

@@ -166,12 +166,10 @@ export default function AiMergeTags() {
       toast.success(
         `Successfully queued ${selectedSuggestions.size} merge operation(s). They will be processed in the background.`
       );
+
       setSelectedSuggestions(new Set());
       setSelectedTagsPerSuggestion(new Map());
       setCustomTagNames(new Map());
-
-      // Refetch suggestions after a delay to allow merges to process
-      setTimeout(() => refetch(), 2000);
     } catch (err: any) {
       toast.dismiss(load);
       toast.error(err.message || "Failed to queue merge operations");
