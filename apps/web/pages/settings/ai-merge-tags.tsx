@@ -26,6 +26,8 @@ export default function AiMergeTags() {
   const { data, isLoading, error, refetch } = useAiMergeSuggestions();
   const submitMerges = useSubmitAiMerges();
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
+  const [selectedTagsPerSuggestion, setSelectedTagsPerSuggestion] = useState<Map<number, Set<number>>>(new Map());
+  const [customTagNames, setCustomTagNames] = useState<Map<number, string>>(new Map());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const suggestions = data?.suggestions || [];
@@ -35,24 +37,88 @@ export default function AiMergeTags() {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
         newSet.delete(index);
+        // Clear tag selections when deselecting suggestion
+        setSelectedTagsPerSuggestion((prevTags) => {
+          const newMap = new Map(prevTags);
+          newMap.delete(index);
+          return newMap;
+        });
+        // Clear custom tag name when deselecting
+        setCustomTagNames((prevNames) => {
+          const newMap = new Map(prevNames);
+          newMap.delete(index);
+          return newMap;
+        });
       } else {
         newSet.add(index);
+        // Initialize all tags as selected when selecting suggestion
+        const allTagIds = new Set(suggestions[index].tags.map(t => t.id));
+        setSelectedTagsPerSuggestion((prevTags) => {
+          const newMap = new Map(prevTags);
+          newMap.set(index, allTagIds);
+          return newMap;
+        });
       }
       return newSet;
     });
   };
 
+  const setNewTagName = (suggestionIndex: number, tagName: string) => {
+    setCustomTagNames((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(suggestionIndex, tagName);
+      return newMap;
+    });
+  };
+
+  const getNewTagName = (suggestionIndex: number): string => {
+    return customTagNames.get(suggestionIndex) || suggestions[suggestionIndex]?.newName || "";
+  };
+
+  const toggleTagInSuggestion = (suggestionIndex: number, tagId: number) => {
+    setSelectedTagsPerSuggestion((prev) => {
+      const newMap = new Map(prev);
+      const selectedTags = newMap.get(suggestionIndex) || new Set();
+      const newSelectedTags = new Set(selectedTags);
+
+      if (newSelectedTags.has(tagId)) {
+        newSelectedTags.delete(tagId);
+      } else {
+        newSelectedTags.add(tagId);
+      }
+
+      newMap.set(suggestionIndex, newSelectedTags);
+      return newMap;
+    });
+  };
+
+  const isTagSelected = (suggestionIndex: number, tagId: number) => {
+    const selectedTags = selectedTagsPerSuggestion.get(suggestionIndex);
+    return selectedTags ? selectedTags.has(tagId) : false;
+  };
+
   const toggleSelectAll = () => {
     if (selectedSuggestions.size === suggestions.length && suggestions.length > 0) {
       setSelectedSuggestions(new Set());
+      setSelectedTagsPerSuggestion(new Map());
+      setCustomTagNames(new Map());
     } else {
-      setSelectedSuggestions(new Set(suggestions.map((_, i) => i)));
+      const allIndices = suggestions.map((_, i) => i);
+      setSelectedSuggestions(new Set(allIndices));
+      // Initialize all tags as selected for all suggestions
+      const newTagSelections = new Map<number, Set<number>>();
+      suggestions.forEach((suggestion, index) => {
+        newTagSelections.set(index, new Set(suggestion.tags.map(t => t.id)));
+      });
+      setSelectedTagsPerSuggestion(newTagSelections);
     }
   };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setSelectedSuggestions(new Set());
+    setSelectedTagsPerSuggestion(new Map());
+    setCustomTagNames(new Map());
     await refetch();
     setIsRefreshing(false);
   };
@@ -63,16 +129,34 @@ export default function AiMergeTags() {
       return;
     }
 
+    // Validate that each selected suggestion has at least 2 selected tags
+    const invalidSuggestions: string[] = [];
+    Array.from(selectedSuggestions).forEach((index) => {
+      const selectedTags = selectedTagsPerSuggestion.get(index);
+      if (!selectedTags || selectedTags.size < 2) {
+        invalidSuggestions.push(getNewTagName(index));
+      }
+    });
+
+    if (invalidSuggestions.length > 0) {
+      toast.error(
+        `Each merge must have at least 2 tags selected. Please check suggestion(s): ${invalidSuggestions.join(", ")}`
+      );
+      return;
+    }
+
     const load = toast.loading(
       `Queueing ${selectedSuggestions.size} merge operation(s)...`
     );
 
     try {
       const mergesToSubmit = Array.from(selectedSuggestions).map((index) => {
-        const suggestion = suggestions[index];
+        const selectedTags = selectedTagsPerSuggestion.get(index) || new Set();
+        const selectedTagIds = Array.from(selectedTags);
+
         return {
-          newTagName: suggestion.newName,
-          tagIds: suggestion.tags.map((t) => t.id),
+          newTagName: getNewTagName(index),
+          tagIds: selectedTagIds,
         };
       });
 
@@ -83,6 +167,8 @@ export default function AiMergeTags() {
         `Successfully queued ${selectedSuggestions.size} merge operation(s). They will be processed in the background.`
       );
       setSelectedSuggestions(new Set());
+      setSelectedTagsPerSuggestion(new Map());
+      setCustomTagNames(new Map());
 
       // Refetch suggestions after a delay to allow merges to process
       setTimeout(() => refetch(), 2000);
@@ -194,11 +280,11 @@ export default function AiMergeTags() {
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <i className="bi-arrow-right-circle text-blue-600" />
-                        <span className="font-semibold text-lg">
-                          {suggestion.newName}
+                        <i className={`bi-arrow-right-circle ${selectedSuggestions.has(index) ? "text-blue-600" : "text-white"}`} />
+                        <span className={`font-semibold text-lg ${selectedSuggestions.has(index) ? "text-gray-900" : "text-white"}`}>
+                          {getNewTagName(index)}
                         </span>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className={`text-xs px-2 py-1 rounded ${selectedSuggestions.has(index) ? "text-gray-500 bg-gray-100" : "text-gray-300 bg-gray-700"}`}>
                           {suggestion.tags.reduce(
                             (sum, tag) => sum + tag.linkCount,
                             0
@@ -208,19 +294,71 @@ export default function AiMergeTags() {
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-2">
-                        {suggestion.tags.map((tag) => (
-                          <span
-                            key={tag.id}
-                            onClick={() => window.open(`${router.basePath}${tag.url}`, '_blank')}
-                            className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full text-sm cursor-pointer transition-colors"
-                          >
-                            <span className="font-medium text-gray-900">{tag.name}</span>
-                            <span className="text-xs text-gray-600">
-                              ({tag.linkCount})
+                        {suggestion.tags.map((tag) => {
+                          const isSuggestionSelected = selectedSuggestions.has(index);
+                          const isThisTagSelected = isTagSelected(index, tag.id);
+                          const isNewTagName = getNewTagName(index) === tag.name;
+
+                          return (
+                            <span
+                              key={tag.id}
+                              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-all ${
+                                isSuggestionSelected
+                                  ? isThisTagSelected
+                                    ? "bg-blue-200 hover:bg-blue-300 border-2 border-blue-600"
+                                    : "bg-gray-200 hover:bg-gray-300 border-2 border-gray-400 opacity-50"
+                                  : "bg-gray-100 hover:bg-gray-200 border-2 border-transparent"
+                              }`}
+                            >
+                              {isSuggestionSelected && (
+                                <i className={`${isThisTagSelected ? "bi-check-circle-fill text-blue-700" : "bi-circle text-gray-500"} text-xs`} />
+                              )}
+                              <span
+                                onClick={(e) => {
+                                  if (isSuggestionSelected) {
+                                    // Toggle tag selection
+                                    e.stopPropagation();
+                                    toggleTagInSuggestion(index, tag.id);
+                                  } else {
+                                    // Open tag URL when suggestion is not selected
+                                    window.open(`${router.basePath}${tag.url}`, '_blank');
+                                  }
+                                }}
+                                className="font-medium text-gray-900 cursor-pointer"
+                                title={
+                                  isSuggestionSelected
+                                    ? isThisTagSelected
+                                      ? "Click to exclude this tag from merge"
+                                      : "Click to include this tag in merge"
+                                    : "Click to view tag"
+                                }
+                              >
+                                {tag.name}
+                              </span>
+                              <span className="text-xs text-gray-600">
+                                ({tag.linkCount})
+                              </span>
+                              {isSuggestionSelected && (
+                                <i
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewTagName(index, tag.name);
+                                  }}
+                                  className={`${isNewTagName ? "bi-star-fill text-yellow-500" : "bi-star text-gray-400 hover:text-yellow-500"} text-xs cursor-pointer ml-1`}
+                                  title={isNewTagName ? "This is the new tag name" : "Click to use as new tag name"}
+                                />
+                              )}
                             </span>
-                          </span>
-                        ))}
+                          );
+                        })}
                       </div>
+
+                      {selectedSuggestions.has(index) && (
+                        <p className="text-xs text-blue-700 mb-2">
+                          <i className="bi-info-circle mr-1" />
+                          Click tag names to include/exclude. Click <i className="bi-star text-xs" /> to set as new tag name. At least 2 tags required.
+                        </p>
+                      )}
 
                       <p className="text-sm text-gray-600 italic">
                         {suggestion.reason}
