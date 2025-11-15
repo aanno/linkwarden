@@ -1,21 +1,44 @@
 # AI-Assisted Tag Merge Instructions
 
 **Date Created:** 2025-01-15
-**Last Updated:** 2025-01-15
-**Current Status:** AI-Powered Feature Implemented ✅
+**Last Updated:** 2025-11-15
+**Current Status:** AI-Powered Feature Fully Enhanced ✅
 **Target:** Reduce from 2,939 tags to ~1,000 tags
 
 ## 🎯 Quick Start: AI-Powered Tag Merging
 
-Linkwarden now includes an **AI-powered tag merging feature** that automatically analyzes your tags and suggests intelligent merge operations!
+Linkwarden now includes an **AI-powered tag merging feature** with advanced controls for intelligent tag consolidation!
 
 ### How to Use
 
 1. **Navigate to Settings** → AI Merge Tags (`/settings/ai-merge-tags`)
 2. **Review AI Suggestions** - The system analyzes your top 300 tags and suggests 5-50 merge operations
-3. **Select Merges** - Use checkboxes to select which suggestions to apply
-4. **Submit** - Click "Merge Selected" to queue operations for background processing
-5. **Wait** - Merges process automatically in the background (check back in a few minutes)
+3. **Select Suggestion** - Check the box for a merge suggestion to enable advanced controls
+4. **Customize Merge** (NEW!):
+   - Click individual tag names to include/exclude them from the merge
+   - Click the ⭐ star icon next to any tag to set it as the new tag name
+   - At least 2 tags must be selected per merge
+5. **Submit** - Click "Merge Selected (N)" to queue operations for background processing
+6. **Instant Update** - Merged suggestions disappear immediately from the UI
+7. **Background Processing** - Merges process automatically via worker (requires `yarn worker:dev`)
+
+### NEW Features (2025-11-15)
+
+✨ **Per-Tag Selection** - Don't want to merge all suggested tags? Now you can:
+- Deselect individual tags from a merge suggestion
+- Only selected tags will be merged (minimum 2 required)
+- Unselected tags remain unchanged
+
+✨ **Custom Tag Names** - Choose which tag name to keep:
+- Click the ⭐ star icon next to any tag in a suggestion
+- Filled yellow star shows which name will be used
+- Default uses AI's suggested name, but you have full control
+
+✨ **Suggestion Count Tracking** - New `aiSuggestionCount` column tracks:
+- How many times each tag has been suggested for merging
+- Higher counts indicate problematic naming patterns
+- Counts are summed when tags are merged
+- Use for future AI improvements and analysis
 
 ### What the AI Detects
 
@@ -31,13 +54,51 @@ The AI automatically identifies:
 
 **GET /api/v1/tags/ai_merge**
 - Generates merge suggestions using configured AI provider
-- Returns JSON with suggested merges and reasons
+- Returns JSON with suggested merges, tag IDs, link counts, and URLs
+- Increments `aiSuggestionCount` for all tags appearing in suggestions
 - Requires authentication
 
 **PATCH /api/v1/tags/ai_merge**
 - Queues selected merge operations for background processing
-- Accepts array of merge operations
-- Returns immediately (processing happens asynchronously)
+- Accepts array of merge operations with tag IDs and new tag names
+- Returns immediately (processing happens asynchronously via worker)
+- Optimistically updates UI cache to remove merged suggestions
+
+### Worker Requirement
+
+⚠️ **IMPORTANT:** The tag merge worker must be running for merges to process!
+
+```bash
+# In addition to the web server:
+yarn web:dev --port 3003
+
+# You must also run the worker:
+yarn worker:dev
+```
+
+The worker processes `TagMergeJob` records in the background:
+- Fetches pending jobs every 10 seconds
+- Processes up to 5 jobs per batch (configurable via `TAG_MERGE_BATCH_SIZE`)
+- Sums `aiSuggestionCount` from merged tags
+- Uses shared `performTagMerge()` function from `@linkwarden/lib`
+
+### Architecture
+
+**Shared Business Logic** (following monorepo best practices):
+
+```
+packages/lib/tagMerge.ts  ← Core merge logic
+  ↑                  ↑
+  │                  │
+apps/web/          apps/worker/
+mergeTags.ts       tagMergeProcessing.ts
+```
+
+Both the manual merge API and AI merge worker use the same `performTagMerge()` function from `@linkwarden/lib`, ensuring:
+- ✅ Single source of truth
+- ✅ Consistent behavior
+- ✅ No cross-app imports
+- ✅ Easier maintenance
 
 ### Configuration
 

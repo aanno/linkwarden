@@ -1,12 +1,21 @@
 # AI Merge Tags API Documentation
 
 **Date:** 2025-01-15
-**Version:** 1.0
-**Status:** Implemented ✅
+**Version:** 2.0
+**Last Updated:** 2025-11-15
+**Status:** Fully Enhanced ✅
 
 ## Overview
 
 The AI Merge Tags API provides intelligent tag merge suggestions and background processing for tag consolidation. It leverages Linkwarden's existing AI/LLM infrastructure (same as auto-tagging) to analyze tags and suggest optimal merge operations based on quality rules.
+
+**Version 2.0 Enhancements:**
+- Per-tag selection within merge suggestions (frontend only)
+- Custom new tag name selection via star icons (frontend only)
+- `aiSuggestionCount` tracking for analytics
+- Shared `performTagMerge()` function in `@linkwarden/lib`
+- Robust duplicate job handling with upsert logic
+- Optimistic UI updates on submission
 
 ## Endpoints
 
@@ -109,7 +118,8 @@ Cookie: next-auth.session-token=...
 4. Calls AI using Vercel AI SDK's `generateObject()`
 5. Maps tag names back to IDs and URLs
 6. Filters out invalid suggestions (tags not found, fewer than 2 tags)
-7. Returns 5-50 suggestions
+7. **NEW:** Increments `aiSuggestionCount` for all tags appearing in suggestions (bulk update)
+8. Returns 5-50 suggestions
 
 **Quality Rules Applied:**
 1. English Only - Translate non-English tags
@@ -257,13 +267,16 @@ enum TagMergeJobStatus {
 2. Fetches up to 5 `PENDING` jobs (batch size configurable via `TAG_MERGE_BATCH_SIZE`)
 3. For each job:
    - Marks as `PROCESSING`
-   - Finds affected links
-   - Executes atomic transaction:
-     - Deletes old tags
-     - Creates new tag with combined links
-     - Invalidates search index for affected links
+   - **NEW:** Fetches and sums `aiSuggestionCount` from tags to be merged
+   - Calls shared `performTagMerge()` from `@linkwarden/lib` with summed count
    - Marks as `COMPLETED` or `FAILED`
 4. Logs progress and remaining job count
+
+**Shared Function Architecture:**
+- Worker imports `performTagMerge` from `@linkwarden/lib` (not from apps/web)
+- Same merge logic used by manual API and worker
+- Ensures consistency and follows monorepo best practices
+- Function handles: duplicate jobs, existing tags, upsert logic
 
 **Environment Variables:**
 - `TAG_MERGE_BATCH_SIZE` - Number of jobs to process per batch (default: 5)
