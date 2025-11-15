@@ -3,6 +3,9 @@ node_modules
 /.pnp
 .pnp.js
 
+# special
+/scripts/*.json
+
 # testing
 /coverage
 
