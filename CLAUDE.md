@@ -22,15 +22,36 @@ Linkwarden is also designed with collaboration in mind, enabling you to share li
   + Tag all entries with 'linkwarden' to indicate they are related to the code MCP server.
   + After you have been started, it is a good idea to retrieve what's has been stored lately, so you have the latest context.
 
+## Tech stack
+
+* yarn (nodejs) for frontend and backend server
+* next.js and react for frontend
+* daisyUI for UI components
+* tailwindcss for styling
+* prettier for code formatting
+
 ## MCP tool usage
 
-Don't use tool 'vscode-mcp-server - execute_shell_command_code (MCP)' because of
-issues. Instead, use bash directly.
-
-For editing file, use tool 'Opened changes in Visual Studio Code'. This is
-much better than tool 'update'. But if you use tool 'update', don't forget to
-use tool 'filesystem - read_text_file (MCP)' before that. Otherwise you get the
-following error: File has not been read yet. Read it first before writing to it.
+* You could access the linkwarden instance with 'chrome-mcp-stdio'
+  with URL http://localhost:3003/. This is because I run linkwarden
+  with `yarn web:dev --port 3003`. Let _me_ start/stop the linkwarden
+  instance, don't try to do it yourself.
+* Always use tool 'cocoindex-rag' before using tools 'grep' or 'search'. 
+  This will ensure you have the latest context about the codebase.
+* Always use tool 'gw-memory - retrieve (MCP)' to get relevant information about the
+  codebase before doing any significant code changes.
+* After making code changes, always use tool 'gw-memory - store (MCP)' to store
+  relevant information about the codebase. Tag all entries with 'linkwarden' to indicate
+  they are related to the code MCP server.
+* Don't use tool 'vscode-mcp-server - execute_shell_command_code (MCP)' because of
+  issues. Instead, use bash directly.
+* For editing file, use tool 'Opened changes in Visual Studio Code'. This is
+  much better than tool 'update'. 
+* But if you use tool 'update', don't forget to
+  use tool 'filesystem - read_text_file (MCP)' before that. Otherwise you get the
+  following error: File has not been read yet. Read it first before writing to it.
+* Don't use the 'linkwarden' tool because of issues; see 
+  doc/bugs/linkwarden-mcp-server-bug-1.md for details.
 
 ## DB connections
 
