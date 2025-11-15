@@ -1,6 +1,5 @@
 import { prisma } from "@linkwarden/prisma";
-import { delay } from "@linkwarden/lib";
-import { performTagMerge } from "../../web/lib/api/controllers/tags/mergeTags";
+import { delay, performTagMerge } from "@linkwarden/lib";
 
 const TAG_MERGE_BATCH_SIZE = Number(process.env.TAG_MERGE_BATCH_SIZE || "") || 5;
 
