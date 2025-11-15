@@ -2,6 +2,7 @@ import { startIndexing } from "./workers/linkIndexing";
 import { linkProcessing } from "./workers/linkProcessing";
 import { startRSSPolling } from "./workers/rssPolling";
 import { trialEndEmailWorker } from "./workers/trialEndEmailWorker";
+import { tagMergeProcessing } from "./workers/tagMergeProcessing";
 
 const workerIntervalInSeconds =
   Number(process.env.ARCHIVE_SCRIPT_INTERVAL) || 10;
@@ -11,6 +12,7 @@ async function init() {
   startRSSPolling();
   linkProcessing(workerIntervalInSeconds);
   startIndexing(workerIntervalInSeconds);
+  tagMergeProcessing(workerIntervalInSeconds);
   trialEndEmailWorker();
 }
 

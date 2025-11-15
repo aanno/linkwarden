@@ -1,0 +1,206 @@
+import { prisma } from "@linkwarden/prisma";
+import { generateObject, LanguageModelV1 } from "ai";
+import {
+  createOpenAICompatible,
+  OpenAICompatibleProviderSettings,
+} from "@ai-sdk/openai-compatible";
+import { perplexity } from "@ai-sdk/perplexity";
+import { azure } from "@ai-sdk/azure";
+import { z } from "zod";
+import { anthropic } from "@ai-sdk/anthropic";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { createOllama } from "ollama-ai-provider";
+
+// Function to concat /api with the base URL properly
+const ensureValidURL = (base: string, path: string) =>
+  `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+
+const getAIModel = (): LanguageModelV1 => {
+  if (process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL) {
+    let config: OpenAICompatibleProviderSettings = {
+      baseURL:
+        process.env.CUSTOM_OPENAI_BASE_URL || "https://api.openai.com/v1",
+      name: process.env.CUSTOM_OPENAI_NAME || "openai",
+      apiKey: process.env.OPENAI_API_KEY,
+    };
+
+    const openaiCompatibleModel = createOpenAICompatible(config);
+
+    return openaiCompatibleModel(process.env.OPENAI_MODEL);
+  }
+  if (
+    process.env.AZURE_API_KEY &&
+    process.env.AZURE_RESOURCE_NAME &&
+    process.env.AZURE_MODEL
+  )
+    return azure(process.env.AZURE_MODEL);
+  if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_MODEL)
+    return anthropic(process.env.ANTHROPIC_MODEL);
+  if (process.env.NEXT_PUBLIC_OLLAMA_ENDPOINT_URL && process.env.OLLAMA_MODEL) {
+    const ollama = createOllama({
+      baseURL: ensureValidURL(
+        process.env.NEXT_PUBLIC_OLLAMA_ENDPOINT_URL,
+        "api"
+      ),
+    });
+
+    return ollama(process.env.OLLAMA_MODEL, {
+      structuredOutputs: true,
+    });
+  }
+  if (process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_MODEL) {
+    const openrouter = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+
+    return openrouter(process.env.OPENROUTER_MODEL) as LanguageModelV1;
+  }
+  if (process.env.PERPLEXITY_API_KEY) {
+    return perplexity(process.env.PERPLEXITY_MODEL || "sonar-pro");
+  }
+  throw new Error("No AI provider configured");
+};
+
+type TagData = { name: string; linkCount: number };
+
+const tagMergeSuggestionsPrompt = (tags: TagData[]) => `
+You are analyzing a bookmark manager's tags to suggest intelligent merge operations.
+
+Current tags (sorted by usage, showing top tags):
+${tags.map((t) => `- "${t.name}" (${t.linkCount} links)`).join("\n")}
+
+Quality Rules for Tags:
+1. English Only: Translate non-English tags (German, Chinese, etc.) to English
+2. Single-Link Limit: Tags with only 1 link should be rare (≤5% of total)
+3. Use Decades: Convert specific years (2025, 1995) to decades (2020s, 1990s)
+4. Avoid Redundancy: Merge obvious duplicates and variations
+5. Subcategories OK: Specific + general tags together are acceptable (e.g., "Programming" + "JavaScript")
+6. Context Clarity: Tags should explain what domain a link belongs to
+
+Merge Suggestions to Make:
+- Case variations: "AI" and "ai" → "AI"
+- Plurals: "Course" and "Courses" → "Courses"
+- Abbreviations: "AI" and "Artificial Intelligence" → "AI"
+- Common suffixes: "Network" and "Networking" → "Networking"
+- Language variations: "Übersetzung" → "Translation"
+- Low-value single-link tags: Consider removing if too specific
+
+Return 5-50 merge suggestions as a JSON array. Each suggestion should merge 2 or more tags.
+
+IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no explanation.
+
+Format:
+[
+  {
+    "newName": "AI",
+    "tags": ["ai", "Artificial Intelligence"],
+    "reason": "Case variation and abbreviation merge"
+  },
+  {
+    "newName": "Courses",
+    "tags": ["Course", "course"],
+    "reason": "Plural and case variation merge"
+  }
+]
+
+Merge suggestions:`;
+
+const MergeSuggestionSchema = z.object({
+  newName: z.string(),
+  tags: z.array(z.string()),
+  reason: z.string(),
+});
+
+export default async function getAiMergeSuggestions(userId: number) {
+  try {
+    // Check if AI is configured
+    try {
+      getAIModel();
+    } catch (err) {
+      return {
+        response: "AI provider not configured. Please configure an AI provider in environment variables.",
+        status: 503,
+      };
+    }
+
+    // Fetch user's tags, sorted by link count (descending)
+    // Take top 300 to avoid overwhelming the AI with too much data
+    const userTags = await prisma.tag.findMany({
+      where: {
+        ownerId: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: { links: true },
+        },
+      },
+      orderBy: {
+        links: {
+          _count: "desc",
+        },
+      },
+      take: 300,
+    });
+
+    if (userTags.length < 10) {
+      return {
+        response: "Not enough tags to generate merge suggestions. You need at least 10 tags.",
+        status: 400,
+      };
+    }
+
+    // Transform to TagData format
+    const tagData: TagData[] = userTags.map((tag) => ({
+      name: tag.name,
+      linkCount: tag._count.links,
+    }));
+
+    // Call AI with the prompt
+    const { object } = await generateObject({
+      model: getAIModel(),
+      prompt: tagMergeSuggestionsPrompt(tagData),
+      output: "array",
+      schema: MergeSuggestionSchema,
+    });
+
+    // Map tag names back to IDs and add URLs
+    const suggestions = object.map((suggestion) => {
+      const tagDetails = suggestion.tags.map((tagName) => {
+        const tag = userTags.find((t) => t.name === tagName);
+        if (!tag) {
+          return null;
+        }
+        return {
+          id: tag.id,
+          name: tag.name,
+          linkCount: tag._count.links,
+          url: `/tags/${tag.id}`,
+        };
+      }).filter(Boolean); // Remove nulls (tags that weren't found)
+
+      // Only include suggestions where we found at least 2 tags
+      if (tagDetails.length < 2) {
+        return null;
+      }
+
+      return {
+        newName: suggestion.newName,
+        tags: tagDetails,
+        reason: suggestion.reason,
+      };
+    }).filter(Boolean); // Remove null suggestions
+
+    return {
+      response: { suggestions },
+      status: 200,
+    };
+  } catch (err) {
+    console.error("Error generating AI merge suggestions:", err);
+    return {
+      response: `Error generating merge suggestions: ${err instanceof Error ? err.message : "Unknown error"}`,
+      status: 500,
+    };
+  }
+}

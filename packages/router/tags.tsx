@@ -304,6 +304,75 @@ const useTagsInfinite = (
   };
 };
 
+type AiMergeSuggestion = {
+  newName: string;
+  tags: Array<{
+    id: number;
+    name: string;
+    linkCount: number;
+    url: string;
+  }>;
+  reason: string;
+};
+
+type AiMergeSuggestionsResponse = {
+  suggestions: AiMergeSuggestion[];
+};
+
+const useAiMergeSuggestions = (): UseQueryResult<AiMergeSuggestionsResponse, Error> => {
+  const session = useSession();
+
+  return useQuery({
+    queryKey: ["ai-merge-suggestions"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/tags/ai_merge");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.response || "Failed to fetch AI merge suggestions");
+      }
+      const data = await response.json();
+      return data.response;
+    },
+    enabled: session.status === "authenticated",
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
+type SubmitAiMergesPayload = {
+  merges: Array<{
+    newTagName: string;
+    tagIds: number[];
+  }>;
+};
+
+const useSubmitAiMerges = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: SubmitAiMergesPayload) => {
+      const response = await fetch("/api/v1/tags/ai_merge", {
+        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+      });
+
+      const responseData = await response.json();
+      if (!response.ok) throw new Error(responseData.response);
+
+      return responseData.response;
+    },
+    onSuccess: () => {
+      // Invalidate tags to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["tags-paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["links"] });
+      // Invalidate suggestions to regenerate after merge
+      queryClient.invalidateQueries({ queryKey: ["ai-merge-suggestions"] });
+    },
+  });
+};
+
 export {
   useTags,
   useTagsPaginated,
@@ -313,4 +382,6 @@ export {
   useRemoveTag,
   useBulkTagDeletion,
   useMergeTags,
+  useAiMergeSuggestions,
+  useSubmitAiMerges,
 };

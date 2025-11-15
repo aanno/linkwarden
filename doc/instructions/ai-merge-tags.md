@@ -1,8 +1,57 @@
 # AI-Assisted Tag Merge Instructions
 
 **Date Created:** 2025-01-15
-**Current Status:** Analysis Complete, Ready for Execution
+**Last Updated:** 2025-01-15
+**Current Status:** AI-Powered Feature Implemented ✅
 **Target:** Reduce from 2,939 tags to ~1,000 tags
+
+## 🎯 Quick Start: AI-Powered Tag Merging
+
+Linkwarden now includes an **AI-powered tag merging feature** that automatically analyzes your tags and suggests intelligent merge operations!
+
+### How to Use
+
+1. **Navigate to Settings** → AI Merge Tags (`/settings/ai-merge-tags`)
+2. **Review AI Suggestions** - The system analyzes your top 300 tags and suggests 5-50 merge operations
+3. **Select Merges** - Use checkboxes to select which suggestions to apply
+4. **Submit** - Click "Merge Selected" to queue operations for background processing
+5. **Wait** - Merges process automatically in the background (check back in a few minutes)
+
+### What the AI Detects
+
+The AI automatically identifies:
+- ✅ **Case variations** (AI/ai → AI)
+- ✅ **Plural forms** (Course/Courses → Courses)
+- ✅ **Abbreviations** (AI/Artificial Intelligence → AI)
+- ✅ **Language issues** (German/Chinese tags → English)
+- ✅ **Suffix variations** (Network/Networking → Networking)
+- ✅ **Low-value single-link tags** (tags used only once)
+
+### API Endpoints
+
+**GET /api/v1/tags/ai_merge**
+- Generates merge suggestions using configured AI provider
+- Returns JSON with suggested merges and reasons
+- Requires authentication
+
+**PATCH /api/v1/tags/ai_merge**
+- Queues selected merge operations for background processing
+- Accepts array of merge operations
+- Returns immediately (processing happens asynchronously)
+
+### Configuration
+
+The feature uses your existing AI configuration (same as auto-tagging):
+- OpenAI (including compatible endpoints)
+- Azure OpenAI
+- Anthropic Claude
+- Ollama (local)
+- OpenRouter
+- Perplexity
+
+**Environment variables:** Already configured if auto-tagging works (e.g., `OPENAI_API_KEY`, `OPENAI_MODEL`)
+
+---
 
 ## Original User Requirements
 
