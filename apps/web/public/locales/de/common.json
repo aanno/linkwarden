@@ -526,5 +526,15 @@
   "expand_sidebar": "Expand Sidebar",
   "shrink_sidebar": "Shrink Sidebar",
   "trial_left_plural": "Trial ends in {{count}} days. Subscribe.",
-  "trial_left_singular": "Trial ends in 1 day. Subscribe."
+  "trial_left_singular": "Trial ends in 1 day. Subscribe.",
+  "ai_merge_tags": "KI-Tag-Zusammenführung",
+  "ai_merge_tags_description": "KI nutzen, um automatisch Tag-Zusammenführungen zu erkennen und vorzuschlagen",
+  "generating_suggestions": "Generiere Zusammenführungsvorschläge mit KI...",
+  "no_merge_suggestions": "Keine Zusammenführungsvorschläge verfügbar",
+  "no_merge_suggestions_description": "Ihre Tags sind bereits gut organisiert! Keine Duplikate oder Variationen erkannt.",
+  "select_all": "Alle auswählen",
+  "deselect_all": "Auswahl aufheben",
+  "merge_selected_count": "Ausgewählte zusammenführen ({{count}})",
+  "of": "von",
+  "selected": "ausgewählt"
 }

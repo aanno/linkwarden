@@ -7,6 +7,7 @@ import { useAiMergeSuggestions, useSubmitAiMerges } from "@linkwarden/router/tag
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Checkbox from "@/components/Checkbox";
+import { useRouter } from "next/router";
 
 type MergeSuggestion = {
   newName: string;
@@ -21,9 +22,11 @@ type MergeSuggestion = {
 
 export default function AiMergeTags() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { data, isLoading, error, refetch } = useAiMergeSuggestions();
   const submitMerges = useSubmitAiMerges();
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const suggestions = data?.suggestions || [];
 
@@ -40,11 +43,18 @@ export default function AiMergeTags() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedSuggestions.size === suggestions.length) {
+    if (selectedSuggestions.size === suggestions.length && suggestions.length > 0) {
       setSelectedSuggestions(new Set());
     } else {
       setSelectedSuggestions(new Set(suggestions.map((_, i) => i)));
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setSelectedSuggestions(new Set());
+    await refetch();
+    setIsRefreshing(false);
   };
 
   const handleSubmit = async () => {
@@ -94,10 +104,10 @@ export default function AiMergeTags() {
           </div>
           <Button
             variant="outline"
-            onClick={() => refetch()}
-            disabled={isLoading}
+            onClick={handleRefresh}
+            disabled={isLoading || isRefreshing}
           >
-            <i className="bi-arrow-clockwise mr-2" />
+            <i className={`bi-arrow-clockwise mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
             {t("refresh")}
           </Button>
         </div>
@@ -142,16 +152,16 @@ export default function AiMergeTags() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Checkbox
-                  checked={selectedSuggestions.size === suggestions.length}
-                  onChange={toggleSelectAll}
+                  state={selectedSuggestions.size === suggestions.length && suggestions.length > 0}
+                  onClick={toggleSelectAll}
                   label={
-                    selectedSuggestions.size === suggestions.length
+                    selectedSuggestions.size === suggestions.length && suggestions.length > 0
                       ? t("deselect_all")
                       : t("select_all")
                   }
                 />
                 <span className="text-sm text-gray-500">
-                  {selectedSuggestions.size} of {suggestions.length} selected
+                  {selectedSuggestions.size} {t("of")} {suggestions.length} {t("selected")}
                 </span>
               </div>
 
@@ -161,7 +171,7 @@ export default function AiMergeTags() {
                 disabled={selectedSuggestions.size === 0 || submitMerges.isPending}
               >
                 <i className="bi-intersect mr-2" />
-                {t("merge_selected")} ({selectedSuggestions.size})
+                {t("merge_selected_count", { count: selectedSuggestions.size })}
               </Button>
             </div>
 
@@ -177,8 +187,9 @@ export default function AiMergeTags() {
                 >
                   <div className="flex items-start gap-3">
                     <Checkbox
-                      checked={selectedSuggestions.has(index)}
-                      onChange={() => toggleSuggestion(index)}
+                      state={selectedSuggestions.has(index)}
+                      onClick={() => toggleSuggestion(index)}
+                      label=""
                     />
 
                     <div className="flex-1">
@@ -200,10 +211,11 @@ export default function AiMergeTags() {
                         {suggestion.tags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm"
+                            onClick={() => window.open(`${router.basePath}${tag.url}`, '_blank')}
+                            className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full text-sm cursor-pointer transition-colors"
                           >
-                            <span className="font-medium">{tag.name}</span>
-                            <span className="text-xs text-gray-500">
+                            <span className="font-medium text-gray-900">{tag.name}</span>
+                            <span className="text-xs text-gray-600">
                               ({tag.linkCount})
                             </span>
                           </span>

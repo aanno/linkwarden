@@ -526,5 +526,15 @@
   "expand_sidebar": "Expand Sidebar",
   "shrink_sidebar": "Shrink Sidebar",
   "trial_left_plural": "Trial ends in {{count}} days. Subscribe.",
-  "trial_left_singular": "Trial ends in 1 day. Subscribe."
+  "trial_left_singular": "Trial ends in 1 day. Subscribe.",
+  "ai_merge_tags": "AI Tag Merging",
+  "ai_merge_tags_description": "Use AI to automatically detect and suggest tag merges to improve organization",
+  "generating_suggestions": "Generating merge suggestions with AI...",
+  "no_merge_suggestions": "No merge suggestions available",
+  "no_merge_suggestions_description": "Your tags are already well organized! No duplicates or variations detected.",
+  "select_all": "Select All",
+  "deselect_all": "Deselect All",
+  "merge_selected_count": "Merge Selected ({{count}})",
+  "of": "of",
+  "selected": "selected"
 }
