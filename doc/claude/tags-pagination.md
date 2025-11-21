@@ -144,6 +144,77 @@ All API endpoints were manually verified with curl:
 - ✅ Empty results handling
 - ✅ Edge cases (invalid search terms, excessive limits)
 
+## Bug Fixes (November 2025)
+
+### Issues Discovered After Initial Implementation
+
+Two critical bugs were discovered during testing with large tag datasets (2900+ tags):
+
+#### Bug 1: Dashboard Shows 100 Tags Instead of Actual Total
+
+**Problem**: The dashboard displayed `tags.length` (100) instead of the actual total count (2932+)
+
+**Root Cause**:
+- The API enforces a maximum limit of 100 items per page
+- The `useTags()` hook requested `limit=1000` but received only 100 items
+- Dashboard code used `tags.length` to display the count, showing the batch size instead of total
+
+**Solution**:
+- Modified `getTags.ts` controller to query and return total count: `const total = await prisma.tag.count({ where: whereClause })`
+- Updated API response to include `total` field in addition to paginated items
+- Changed `useTags()` hook return type from `TagIncludingLinkCount[]` to `{tags: TagIncludingLinkCount[], total?: number}`
+- Updated all consumers to use `tagsData.total` for display instead of `tags.length`
+
+#### Bug 2: Clicking Lazy-Loaded Tags Redirects to Dashboard (Mobile)
+
+**Problem**: When clicking tags not in the first 100 items (lazy-loaded tags), the app would briefly show the tag's links, then immediately redirect to `/dashboard` in mobile view
+
+**Root Cause**:
+- `pages/tags/[id].tsx` checks if the clicked tag exists in the loaded `tags` array
+- If not found, it assumes the tag doesn't exist and redirects to dashboard
+- With pagination, tags beyond the first batch aren't loaded yet, causing false redirects
+
+**Solution**:
+- Added `totalTagCount` check to redirect logic
+- Only redirect if ALL tags are loaded: `tags.length >= totalTagCount`
+- This prevents false redirects when the tag exists but hasn't been loaded yet
+
+### Files Modified for Bug Fixes
+
+1. **`apps/web/lib/api/controllers/tags/getTags.ts`** - Added total count query and included in response
+2. **`packages/router/tags.tsx`** - Changed `useTags()` return type to `{tags, total}`, added `UseTagsResult` type
+3. **`apps/web/pages/dashboard.tsx`** - Use `totalTagCount` from API instead of `tags.length`, added prop to Section component
+4. **`apps/mobile/app/(tabs)/dashboard/index.tsx`** - Use `totalTagCount` for display
+5. **`apps/web/pages/tags/[id].tsx`** - Fixed redirect logic with `allTagsLoaded` check
+6. **`apps/web/pages/settings/preference.tsx`** - Updated for new `useTags()` signature
+7. **`apps/web/components/InputSelect/TagSelection.tsx`** - Updated for new `useTags()` signature
+
+### Updated Response Format
+
+The API response now includes a `total` field:
+
+```json
+{
+  "success": true,
+  "response": {
+    "items": [
+      {"id": 11, "name": "AI", "_count": {"links": 2}, ...},
+      {"id": 30, "name": "Ai Analytics", "_count": {"links": 1}, ...}
+    ],
+    "nextCursor": 35,
+    "hasMore": true,
+    "total": 2932
+  }
+}
+```
+
+### Verification
+
+- ✅ Dashboard correctly displays total tag count (2932 instead of 100)
+- ✅ Mobile users can click any tag, including those beyond first 100
+- ✅ All TypeScript errors resolved
+- ✅ Backward compatibility maintained for components that only need tag list
+
 ## Key Design Decisions
 
 1. **Column-based sorting** instead of enum values for flexibility and clarity
