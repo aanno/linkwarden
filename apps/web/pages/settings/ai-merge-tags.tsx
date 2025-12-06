@@ -24,12 +24,15 @@ type MergeSuggestion = {
 export default function AiMergeTags() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { data, isLoading, error, refetch } = useAiMergeSuggestions();
+  const { data, isLoading, error, refetch, isFetching } = useAiMergeSuggestions();
   const submitMerges = useSubmitAiMerges();
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
   const [selectedTagsPerSuggestion, setSelectedTagsPerSuggestion] = useState<Map<string, Set<number>>>(new Map());
   const [customTagNames, setCustomTagNames] = useState<Map<string, string>>(new Map());
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // FEATURE #3: Manual tag name editing
+  const [editingTagName, setEditingTagName] = useState<string | null>(null);
+  const [tempTagName, setTempTagName] = useState<string>("");
 
   const suggestions = data?.suggestions || [];
 
@@ -46,25 +49,19 @@ export default function AiMergeTags() {
       const newSet = new Set(prev);
       if (newSet.has(suggestionId)) {
         newSet.delete(suggestionId);
-        // Clear tag selections when deselecting suggestion
-        setSelectedTagsPerSuggestion((prevTags) => {
-          const newMap = new Map(prevTags);
-          newMap.delete(suggestionId);
-          return newMap;
-        });
-        // Clear custom tag name when deselecting
-        setCustomTagNames((prevNames) => {
-          const newMap = new Map(prevNames);
-          newMap.delete(suggestionId);
-          return newMap;
-        });
+        // FEATURE #1: Don't clear tag selections - they persist for later
+        // User can deselect suggestion, then reselect and their tag choices are preserved
       } else {
         newSet.add(suggestionId);
-        // Initialize all tags as selected when selecting suggestion
-        const allTagIds = new Set(suggestion.tags.map(t => t.id));
+        // Only initialize tag selections if they don't already exist
         setSelectedTagsPerSuggestion((prevTags) => {
           const newMap = new Map(prevTags);
-          newMap.set(suggestionId, allTagIds);
+          if (!newMap.has(suggestionId)) {
+            // First time selecting - initialize with all tags
+            const allTagIds = new Set(suggestion.tags.map(t => t.id));
+            newMap.set(suggestionId, allTagIds);
+          }
+          // Else: Keep existing selections from previous toggle
           return newMap;
         });
       }
@@ -73,11 +70,45 @@ export default function AiMergeTags() {
   };
 
   const setNewTagName = (suggestionId: string, tagName: string) => {
+    // FEATURE #3: Validate tag name before saving
+    const trimmed = tagName.trim();
+    if (trimmed.length === 0) {
+      toast.error("Tag name cannot be empty");
+      return false;
+    }
+    if (trimmed.length > 50) {
+      toast.error("Tag name cannot exceed 50 characters");
+      return false;
+    }
+    // Additional validation: no leading/trailing whitespace, no tabs/newlines
+    if (trimmed !== tagName) {
+      tagName = trimmed;
+    }
+    if (/[\t\n\r]/.test(tagName)) {
+      toast.error("Tag name cannot contain tabs or newlines");
+      return false;
+    }
+
     setCustomTagNames((prev) => {
       const newMap = new Map(prev);
       newMap.set(suggestionId, tagName);
       return newMap;
     });
+    return true;
+  };
+
+  // FEATURE #3: Save edited tag name and exit edit mode
+  const saveEditedTagName = (suggestionId: string) => {
+    if (tempTagName.trim() && setNewTagName(suggestionId, tempTagName.trim())) {
+      setEditingTagName(null);
+      setTempTagName("");
+    }
+  };
+
+  // FEATURE #3: Cancel editing without saving
+  const cancelEditingTagName = () => {
+    setEditingTagName(null);
+    setTempTagName("");
   };
 
   const getNewTagName = (suggestionId: string, suggestion: MergeSuggestion): string => {
@@ -109,27 +140,30 @@ export default function AiMergeTags() {
   const toggleSelectAll = () => {
     if (selectedSuggestions.size === suggestions.length && suggestions.length > 0) {
       setSelectedSuggestions(new Set());
-      setSelectedTagsPerSuggestion(new Map());
-      setCustomTagNames(new Map());
+      // FEATURE #1: Don't clear tag selections or custom names - they persist
     } else {
       const allIds = suggestions.map((s) => s.id);
       setSelectedSuggestions(new Set(allIds));
-      // Initialize all tags as selected for all suggestions
-      const newTagSelections = new Map<string, Set<number>>();
-      suggestions.forEach((suggestion) => {
-        newTagSelections.set(suggestion.id, new Set(suggestion.tags.map(t => t.id)));
+      // Only initialize tag selections for suggestions that don't have them yet
+      setSelectedTagsPerSuggestion((prevTags) => {
+        const newTagSelections = new Map(prevTags);
+        suggestions.forEach((suggestion) => {
+          if (!newTagSelections.has(suggestion.id)) {
+            newTagSelections.set(suggestion.id, new Set(suggestion.tags.map(t => t.id)));
+          }
+        });
+        return newTagSelections;
       });
-      setSelectedTagsPerSuggestion(newTagSelections);
     }
   };
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
+    // FEATURE #2: Use query's built-in isFetching state instead of local state
+    // This ensures refresh state persists even if user navigates away
     setSelectedSuggestions(new Set());
     setSelectedTagsPerSuggestion(new Map());
     setCustomTagNames(new Map());
     await refetch();
-    setIsRefreshing(false);
   };
 
   const handleSubmit = async () => {
@@ -200,9 +234,9 @@ export default function AiMergeTags() {
           <Button
             variant="outline"
             onClick={handleRefresh}
-            disabled={isLoading || isRefreshing}
+            disabled={isLoading || isFetching}
           >
-            <i className={`bi-arrow-clockwise mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            <i className={`bi-arrow-clockwise mr-2 ${isFetching ? "animate-spin" : ""}`} />
             {t("refresh")}
           </Button>
         </div>
@@ -290,9 +324,46 @@ export default function AiMergeTags() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <i className={`bi-arrow-right-circle ${selectedSuggestions.has(suggestion.id) ? "text-blue-600" : "text-white"}`} />
-                        <span className={`font-semibold text-lg ${selectedSuggestions.has(suggestion.id) ? "text-gray-900" : "text-white"}`}>
-                          {getNewTagName(suggestion.id, suggestion)}
-                        </span>
+
+                        {/* FEATURE #3: Manual tag name editing with input field */}
+                        {editingTagName === suggestion.id ? (
+                          <input
+                            type="text"
+                            value={tempTagName}
+                            onChange={(e) => setTempTagName(e.target.value)}
+                            onBlur={() => saveEditedTagName(suggestion.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                saveEditedTagName(suggestion.id);
+                              } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                cancelEditingTagName();
+                              }
+                            }}
+                            autoFocus
+                            className="font-semibold text-lg px-2 py-1 border-2 border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+                            maxLength={50}
+                            placeholder="Enter tag name"
+                          />
+                        ) : (
+                          <>
+                            <span className={`font-semibold text-lg ${selectedSuggestions.has(suggestion.id) ? "text-gray-900" : "text-white"}`}>
+                              {getNewTagName(suggestion.id, suggestion)}
+                            </span>
+                            {selectedSuggestions.has(suggestion.id) && (
+                              <i
+                                className="bi-pencil text-sm text-gray-500 hover:text-blue-600 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  setTempTagName(getNewTagName(suggestion.id, suggestion));
+                                  setEditingTagName(suggestion.id);
+                                }}
+                                title="Edit tag name manually"
+                              />
+                            )}
+                          </>
+                        )}
+
                         <span className={`text-xs px-2 py-1 rounded ${selectedSuggestions.has(suggestion.id) ? "text-gray-500 bg-gray-100" : "text-gray-300 bg-gray-700"}`}>
                           {suggestion.tags.reduce(
                             (sum, tag) => sum + tag.linkCount,
@@ -365,7 +436,7 @@ export default function AiMergeTags() {
                       {selectedSuggestions.has(suggestion.id) && (
                         <p className="text-xs text-blue-700 mb-2">
                           <i className="bi-info-circle mr-1" />
-                          Click tag names to include/exclude. Click <i className="bi-star text-xs" /> to set as new tag name. At least 2 tags required.
+                          Click tag names to include/exclude. Click <i className="bi-star text-xs" /> to set as new tag name, or <i className="bi-pencil text-xs" /> to type custom name. At least 2 tags required.
                         </p>
                       )}
 
