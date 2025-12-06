@@ -10,6 +10,7 @@ import { z } from "zod";
 import { anthropic } from "@ai-sdk/anthropic";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { createOllama } from "ollama-ai-provider";
+import { getTagMergeCandidates, TagCandidate } from "./getAiMergeCandidates";
 
 // Function to concat /api with the base URL properly
 const ensureValidURL = (base: string, path: string) =>
@@ -123,26 +124,9 @@ export default async function getAiMergeSuggestions(userId: number) {
       };
     }
 
-    // Fetch user's tags, sorted by link count (descending)
-    // Take top 300 to avoid overwhelming the AI with too much data
-    const userTags = await prisma.tag.findMany({
-      where: {
-        ownerId: userId,
-      },
-      select: {
-        id: true,
-        name: true,
-        _count: {
-          select: { links: true },
-        },
-      },
-      orderBy: {
-        links: {
-          _count: "desc",
-        },
-      },
-      take: 300,
-    });
+    // Fetch tag merge candidates using the pluggable provider
+    // By default, this uses topTagsByLinkCount which takes top 300 tags
+    const userTags: TagCandidate[] = await getTagMergeCandidates(userId);
 
     if (userTags.length < 10) {
       return {
@@ -151,10 +135,10 @@ export default async function getAiMergeSuggestions(userId: number) {
       };
     }
 
-    // Transform to TagData format
+    // Transform to TagData format for the AI prompt
     const tagData: TagData[] = userTags.map((tag) => ({
       name: tag.name,
-      linkCount: tag._count.links,
+      linkCount: tag.linkCount,
     }));
 
     // Call AI with the prompt
@@ -175,7 +159,7 @@ export default async function getAiMergeSuggestions(userId: number) {
         return {
           id: tag.id,
           name: tag.name,
-          linkCount: tag._count.links,
+          linkCount: tag.linkCount,
           url: `/tags/${tag.id}`,
         };
       }).filter(Boolean); // Remove nulls (tags that weren't found)
