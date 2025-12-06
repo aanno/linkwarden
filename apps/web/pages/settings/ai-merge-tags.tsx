@@ -34,6 +34,9 @@ export default function AiMergeTags() {
   const [editingTagName, setEditingTagName] = useState<string | null>(null);
   const [tempTagName, setTempTagName] = useState<string>("");
 
+  // FEATURE #4: Additional tag mode (add tag instead of merging)
+  const [additionalTagMode, setAdditionalTagMode] = useState<Map<string, boolean>>(new Map());
+
   const suggestions = data?.suggestions || [];
 
   // CRITICAL: Clear all user selections when suggestions change
@@ -42,6 +45,7 @@ export default function AiMergeTags() {
     setSelectedSuggestions(new Set());
     setSelectedTagsPerSuggestion(new Map());
     setCustomTagNames(new Map());
+    setAdditionalTagMode(new Map());
   }, [data]); // Re-run when data changes (new suggestions loaded)
 
   const toggleSuggestion = (suggestionId: string, suggestion: MergeSuggestion) => {
@@ -163,12 +167,13 @@ export default function AiMergeTags() {
     setSelectedSuggestions(new Set());
     setSelectedTagsPerSuggestion(new Map());
     setCustomTagNames(new Map());
+    setAdditionalTagMode(new Map());
     await refetch();
   };
 
   const handleSubmit = async () => {
     if (selectedSuggestions.size === 0) {
-      toast.error("Please select at least one merge suggestion");
+      toast.error("Please select at least one suggestion");
       return;
     }
 
@@ -184,13 +189,17 @@ export default function AiMergeTags() {
 
     if (invalidSuggestions.length > 0) {
       toast.error(
-        `Each merge must have at least 2 tags selected. Please check suggestion(s): ${invalidSuggestions.join(", ")}`
+        `Each operation must have at least 2 tags selected. Please check suggestion(s): ${invalidSuggestions.join(", ")}`
       );
       return;
     }
 
+    // FEATURE #4: Count merge vs additional operations for better messaging
+    const mergeCount = Array.from(selectedSuggestions).filter(id => !additionalTagMode.get(id)).length;
+    const additionalCount = Array.from(selectedSuggestions).filter(id => additionalTagMode.get(id)).length;
+
     const load = toast.loading(
-      `Queueing ${selectedSuggestions.size} merge operation(s)...`
+      `Queueing ${selectedSuggestions.size} operation(s)...`
     );
 
     try {
@@ -198,26 +207,33 @@ export default function AiMergeTags() {
         const selectedTags = selectedTagsPerSuggestion.get(suggestionId) || new Set();
         const selectedTagIds = Array.from(selectedTags);
         const suggestion = suggestions.find(s => s.id === suggestionId)!;
+        const isAdditionalMode = additionalTagMode.get(suggestionId) || false;
 
         return {
           newTagName: getNewTagName(suggestionId, suggestion),
           tagIds: selectedTagIds,
+          mode: isAdditionalMode ? 'additional' as const : 'merge' as const,
         };
       });
 
       await submitMerges.mutateAsync({ merges: mergesToSubmit });
 
       toast.dismiss(load);
-      toast.success(
-        `Successfully queued ${selectedSuggestions.size} merge operation(s). They will be processed in the background.`
-      );
+      const successMessage = mergeCount > 0 && additionalCount > 0
+        ? `Successfully queued ${mergeCount} merge(s) and ${additionalCount} addition(s). They will be processed in the background.`
+        : mergeCount > 0
+        ? `Successfully queued ${mergeCount} merge operation(s). They will be processed in the background.`
+        : `Successfully queued ${additionalCount} tag addition(s). They will be processed in the background.`;
+
+      toast.success(successMessage);
 
       setSelectedSuggestions(new Set());
       setSelectedTagsPerSuggestion(new Map());
       setCustomTagNames(new Map());
+      setAdditionalTagMode(new Map());
     } catch (err: any) {
       toast.dismiss(load);
-      toast.error(err.message || "Failed to queue merge operations");
+      toast.error(err.message || "Failed to queue operations");
     }
   };
 
@@ -299,8 +315,37 @@ export default function AiMergeTags() {
                 onClick={handleSubmit}
                 disabled={selectedSuggestions.size === 0 || submitMerges.isPending}
               >
-                <i className="bi-intersect mr-2" />
-                {t("merge_selected_count", { count: selectedSuggestions.size })}
+                {/* FEATURE #4: Dynamic button text and icon based on mode */}
+                {(() => {
+                  const hasAnyAdditional = Array.from(selectedSuggestions).some(id => additionalTagMode.get(id));
+                  const hasAnyMerge = Array.from(selectedSuggestions).some(id => !additionalTagMode.get(id));
+
+                  if (hasAnyAdditional && hasAnyMerge) {
+                    // Mixed mode
+                    return (
+                      <>
+                        <i className="bi-gear mr-2" />
+                        Process Selected ({selectedSuggestions.size})
+                      </>
+                    );
+                  } else if (hasAnyAdditional) {
+                    // All additional mode
+                    return (
+                      <>
+                        <i className="bi-plus-circle mr-2" />
+                        Add to Selected ({selectedSuggestions.size})
+                      </>
+                    );
+                  } else {
+                    // All merge mode (default)
+                    return (
+                      <>
+                        <i className="bi-intersect mr-2" />
+                        Merge Selected ({selectedSuggestions.size})
+                      </>
+                    );
+                  }
+                })()}
               </Button>
             </div>
 
@@ -443,6 +488,26 @@ export default function AiMergeTags() {
                       <p className="text-sm text-gray-600 italic">
                         {suggestion.reason}
                       </p>
+
+                      {/* FEATURE #4: Additional tag mode checkbox */}
+                      {selectedSuggestions.has(suggestion.id) && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <Checkbox
+                            state={additionalTagMode.get(suggestion.id) || false}
+                            onClick={() => {
+                              setAdditionalTagMode((prev) => {
+                                const newMap = new Map(prev);
+                                newMap.set(suggestion.id, !prev.get(suggestion.id));
+                                return newMap;
+                              });
+                            }}
+                            label="Set as additional tag (don't merge)"
+                          />
+                          <p className="text-xs text-gray-500 ml-6 mt-1">
+                            This will add "<strong className="text-gray-700">{getNewTagName(suggestion.id, suggestion)}</strong>" to all links with the selected tags, without removing the original tags.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

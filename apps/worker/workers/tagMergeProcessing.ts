@@ -1,5 +1,5 @@
 import { prisma } from "@linkwarden/prisma";
-import { delay, performTagMerge } from "@linkwarden/lib";
+import { delay, performTagMerge, performAdditionalTag } from "@linkwarden/lib";
 
 const TAG_MERGE_BATCH_SIZE = Number(process.env.TAG_MERGE_BATCH_SIZE || "") || 5;
 
@@ -32,9 +32,12 @@ export async function tagMergeProcessing(interval = 10) {
       // Process each job
       for (const job of pendingJobs) {
         try {
+          const isAdditionalMode = job.mode === 'additional';
+          const operationType = isAdditionalMode ? 'addition' : 'merge';
+
           console.log(
             "\x1b[34m%s\x1b[0m",
-            `- Processing merge job ${job.id}: "${job.newTagName}" (${job.tagIds.length} tags)`
+            `- Processing ${operationType} job ${job.id}: "${job.newTagName}" (${job.tagIds.length} tags)`
           );
 
           // Mark as processing
@@ -43,7 +46,7 @@ export async function tagMergeProcessing(interval = 10) {
             data: { status: "PROCESSING" },
           });
 
-          // Fetch aiSuggestionCount values from tags to be merged
+          // Fetch aiSuggestionCount values from tags to be merged/referenced
           const tagsToMerge = await prisma.tag.findMany({
             where: {
               ownerId: job.userId,
@@ -62,13 +65,24 @@ export async function tagMergeProcessing(interval = 10) {
             0
           );
 
-          // Perform the merge using shared function
-          await performTagMerge({
-            userId: job.userId,
-            tagIds: job.tagIds,
-            newTagName: job.newTagName,
-            aiSuggestionCount: totalSuggestionCount,
-          });
+          // FEATURE #4: Perform merge or addition based on mode
+          if (isAdditionalMode) {
+            // Add tag to links without removing original tags
+            await performAdditionalTag({
+              userId: job.userId,
+              tagIds: job.tagIds,
+              newTagName: job.newTagName,
+              aiSuggestionCount: totalSuggestionCount,
+            });
+          } else {
+            // Merge tags (default behavior)
+            await performTagMerge({
+              userId: job.userId,
+              tagIds: job.tagIds,
+              newTagName: job.newTagName,
+              aiSuggestionCount: totalSuggestionCount,
+            });
+          }
 
           // Mark job as completed
           const result = { status: 200 };
@@ -85,7 +99,7 @@ export async function tagMergeProcessing(interval = 10) {
 
             console.log(
               "\x1b[34m%s\x1b[0m",
-              `✓ Completed merge job ${job.id}: "${job.newTagName}"`
+              `✓ Completed ${operationType} job ${job.id}: "${job.newTagName}"`
             );
           } else {
             // Error
@@ -100,14 +114,14 @@ export async function tagMergeProcessing(interval = 10) {
 
             console.error(
               "\x1b[31m%s\x1b[0m",
-              `✗ Failed merge job ${job.id}: ${result.response}`
+              `✗ Failed ${operationType} job ${job.id}: ${result.response}`
             );
           }
         } catch (error: any) {
           // Unexpected error
           console.error(
             "\x1b[31m%s\x1b[0m",
-            `Error processing merge job ${job.id}:`,
+            `Error processing tag job ${job.id}:`,
             error
           );
 

@@ -231,6 +231,7 @@ model TagMergeJob {
   user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   newTagName  String
   tagIds      Int[]
+  mode        String             @default("merge") // FEATURE #4: "merge" or "additional"
   status      TagMergeJobStatus  @default(PENDING)
   error       String?
   createdAt   DateTime           @default(now())

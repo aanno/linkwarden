@@ -342,6 +342,7 @@ type SubmitAiMergesPayload = {
   merges: Array<{
     newTagName: string;
     tagIds: number[];
+    mode?: 'merge' | 'additional'; // FEATURE #4: Optional mode for backward compatibility
   }>;
 };
 

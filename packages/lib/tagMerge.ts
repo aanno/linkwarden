@@ -155,3 +155,122 @@ export async function performTagMerge(options: MergeTagsOptions) {
 
   return newTag;
 }
+
+export type AdditionalTagOptions = {
+  userId: number;
+  tagIds: number[];
+  newTagName: string;
+  aiSuggestionCount?: number;
+};
+
+/**
+ * FEATURE #4: Add a tag to all links that have the selected tags (without removing the original tags)
+ * @param options - Addition options including optional aiSuggestionCount
+ * @returns The newly created/updated tag and stats about the operation
+ */
+export async function performAdditionalTag(options: AdditionalTagOptions) {
+  const { userId, tagIds, newTagName, aiSuggestionCount } = options;
+
+  // Check if tags still exist
+  const existingTags = await prisma.tag.findMany({
+    where: {
+      id: { in: tagIds },
+      ownerId: userId,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  // Extract IDs of tags that actually exist
+  const existingTagIds = existingTags.map((t) => t.id);
+
+  // If no tags exist, nothing to do
+  if (existingTagIds.length === 0) {
+    throw new Error("Tags to reference no longer exist");
+  }
+
+  // Find all links that have ANY of the existing tags
+  const linksWithTags = await prisma.link.findMany({
+    where: {
+      tags: {
+        some: {
+          id: {
+            in: existingTagIds,
+          },
+          ownerId: userId,
+        },
+      },
+    },
+    select: {
+      id: true,
+      tags: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  const affectedLinkIds = linksWithTags.map((link) => link.id);
+
+  // Filter out links that already have the new tag (to avoid duplicates)
+  const linksNeedingTag = linksWithTags.filter(
+    (link) => !link.tags.some((tag) => tag.name === newTagName)
+  );
+  const linksToConnect = linksNeedingTag.map((link) => link.id);
+
+  const { newTag, linksUpdated, linksSkipped } = await prisma.$transaction(async (tx) => {
+    // Create or find the new tag
+    const newTag = await tx.tag.upsert({
+      where: {
+        name_ownerId: {
+          name: newTagName,
+          ownerId: userId,
+        },
+      },
+      create: {
+        name: newTagName,
+        ownerId: userId,
+        ...(aiSuggestionCount !== undefined && { aiSuggestionCount }),
+        links: {
+          connect: linksToConnect.map((id) => ({ id })),
+        },
+      },
+      update: {
+        ...(aiSuggestionCount !== undefined && { aiSuggestionCount }),
+        links: {
+          connect: linksToConnect.map((id) => ({ id })),
+        },
+      },
+    });
+
+    // Update indexVersion for affected links
+    if (linksToConnect.length > 0) {
+      await tx.link.updateMany({
+        where: {
+          id: {
+            in: linksToConnect,
+          },
+        },
+        data: {
+          indexVersion: null,
+        },
+      });
+    }
+
+    return {
+      newTag,
+      linksUpdated: linksToConnect.length,
+      linksSkipped: affectedLinkIds.length - linksToConnect.length, // Links that already had the tag
+    };
+  });
+
+  console.log(
+    `Added tag "${newTagName}" to ${linksUpdated} links (${linksSkipped} already had it)`
+  );
+
+  return { newTag, linksUpdated, linksSkipped };
+}
