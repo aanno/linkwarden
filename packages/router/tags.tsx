@@ -305,6 +305,7 @@ const useTagsInfinite = (
 };
 
 type AiMergeSuggestion = {
+  id: string;
   newName: string;
   tags: Array<{
     id: number;
