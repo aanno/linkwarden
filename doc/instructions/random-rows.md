@@ -338,7 +338,7 @@ This approach aligns with PostgreSQL best practices for complex weighted samplin
 
 ---
 
-# I have a second problem. now I want to choose the n rows depending on the (absolute) diifference to the median weight value, but every row should at least have a minimal constant propabiliy to get chosen.
+# I have a second problem. now I want to choose the n rows depending on the (absolute) difference to the median weight value, but every row should at least have a minimal constant propabiliy to get chosen.
 
 To choose \$ n \$ rows in PostgreSQL based on the absolute difference of their weight to the median weight, while ensuring every row has at least a minimal constant probability, here is a structured approach:
 

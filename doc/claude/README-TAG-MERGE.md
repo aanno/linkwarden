@@ -40,7 +40,74 @@ const candidates = await topTagsByLinkCount(userId, 300); // Returns top 300 tag
 
 **Default limit**: 300 tags (to avoid overwhelming the AI)
 
-### 2. `similarNameTags` (Not Yet Implemented)
+### 2. `byAiSuggestionCount` ✅ **Implemented**
+
+Selects tags weighted by `aiSuggestionCount` using probabilistic sampling.
+
+**Rationale**: This basically resuggests tags that have been suggested before. It serves as memory and provides a 'continuation' that will ease the mind of humans - you can progressively work through tags you've already seen suggested, creating a consistent workflow.
+
+**Algorithm**: Uses weighted random sampling formula: `ORDER BY -LN(RANDOM()) / aiSuggestionCount`
+
+**Usage**:
+```typescript
+const candidates = await byAiSuggestionCount(userId, 300);
+```
+
+**Notes**: Only selects tags where `aiSuggestionCount > 0`
+
+### 3. `byAiSuggestionCountCapped` ✅ **Implemented**
+
+Same as `byAiSuggestionCount` but with a maximum weight cap.
+
+**Rationale**: Same as Provider 2, but avoids over-preferring tags we have suggested many times before. Without this cap, humans might become bored seeing the same suggestions repeatedly. This adds variety while maintaining continuity.
+
+**Algorithm**: Uses capped weight: `LEAST(aiSuggestionCount, maxWeight)`
+
+**Usage**:
+```typescript
+// Cap weight at 10 (default)
+const candidates = await byAiSuggestionCountCapped(userId, 300, 10);
+```
+
+**Parameters**:
+- `userId`: User ID
+- `limit`: Number of tags to select (default: 300)
+- `maxWeight`: Maximum weight cap (default: 10)
+
+### 4. `byMedianDifference` ✅ **Implemented**
+
+Selects tags weighted by their distance from the median `aiSuggestionCount`.
+
+**Rationale**: A good tag is one that doesn't fit all your links (which would be too general), but isn't only used for a few links either (which would be too specific). We prefer tags more toward the 'middle' - the goldilocks zone of tag utility.
+
+**Algorithm**:
+1. Calculates median `aiSuggestionCount` in separate query
+2. Weights by inverse distance: `1.0 / (1.0 + ABS(aiSuggestionCount - median))`
+3. No transaction used for performance
+
+**Usage**:
+```typescript
+const candidates = await byMedianDifference(userId, 300);
+```
+
+**Notes**: Good for finding tags in the quality sweet spot
+
+### 5. `uniformLowUsage` ✅ **Implemented**
+
+Uniformly selects random tags that have exactly 1 link.
+
+**Rationale**: Suggests tags that are too specific now. The hope is these tags will fit into one of the more general tags, reducing clutter and improving tag consistency.
+
+**Algorithm**: Simple uniform random sampling: `ORDER BY RANDOM()`
+
+**Usage**:
+```typescript
+const candidates = await uniformLowUsage(userId, 300);
+```
+
+**Notes**: Only returns tags with exactly 1 link (linkCount = 1)
+
+### 6. `similarNameTags` (Not Yet Implemented)
 
 Returns tags with similar names that are likely duplicates.
 
@@ -50,12 +117,6 @@ Returns tags with similar names that are likely duplicates.
 - Levenshtein distance matching
 - Soundex algorithm
 - Case/pluralization variations
-
-### 3. `lowUsageTags` (Not Yet Implemented)
-
-Returns tags with very low usage (1-2 links).
-
-**Rationale**: These are often too specific and good candidates for merging into broader categories.
 
 ## Using the Provider System
 
@@ -75,12 +136,43 @@ const candidates = await getTagMergeCandidates(userId);
 Pass a custom provider function:
 
 ```typescript
-import { getTagMergeCandidates, topTagsByLinkCount } from './getAiMergeCandidates';
+import {
+  getTagMergeCandidates,
+  topTagsByLinkCount,
+  byAiSuggestionCount,
+  byAiSuggestionCountCapped,
+  byMedianDifference,
+  uniformLowUsage
+} from './getAiMergeCandidates';
 
 // Use top 500 instead of 300
 const candidates = await getTagMergeCandidates(
   userId,
   (uid) => topTagsByLinkCount(uid, 500)
+);
+
+// Use AI suggestion count weighted sampling
+const candidates = await getTagMergeCandidates(
+  userId,
+  byAiSuggestionCount
+);
+
+// Use capped AI suggestion count (max weight = 15)
+const candidates = await getTagMergeCandidates(
+  userId,
+  (uid) => byAiSuggestionCountCapped(uid, 300, 15)
+);
+
+// Use median-based selection
+const candidates = await getTagMergeCandidates(
+  userId,
+  byMedianDifference
+);
+
+// Focus on single-link tags for cleanup
+const candidates = await getTagMergeCandidates(
+  userId,
+  uniformLowUsage
 );
 ```
 
@@ -123,14 +215,17 @@ You can create a provider that combines results from multiple strategies:
 
 ```typescript
 export const combinedProvider: TagCandidateProvider = async (userId: number) => {
-  // Get top 200 by usage
-  const topTags = await topTagsByLinkCount(userId, 200);
+  // Get 150 tags weighted by AI suggestion count (problematic tags)
+  const aiTags = await byAiSuggestionCount(userId, 150);
 
-  // Get low usage tags (when implemented)
-  // const lowTags = await lowUsageTags(userId);
+  // Get 100 single-link tags for cleanup
+  const lowTags = await uniformLowUsage(userId, 100);
+
+  // Get 50 tags near median (balanced selection)
+  const medianTags = await byMedianDifference(userId, 50);
 
   // Combine and deduplicate by ID
-  const combined = [...topTags /* , ...lowTags */];
+  const combined = [...aiTags, ...lowTags, ...medianTags];
   const unique = Array.from(
     new Map(combined.map(tag => [tag.id, tag])).values()
   );
@@ -138,6 +233,26 @@ export const combinedProvider: TagCandidateProvider = async (userId: number) => 
   return unique.slice(0, 300); // Limit total
 };
 ```
+
+## When to Use Which Provider
+
+### Decision Guide
+
+| Use Case | Recommended Provider | Why |
+|----------|---------------------|-----|
+| **First time / General** | `topTagsByLinkCount` | Safe default, focuses on high-impact tags |
+| **Continue where left off** | `byAiSuggestionCount` | Resuggests previously seen tags for workflow continuity |
+| **Avoid boredom** | `byAiSuggestionCountCapped` | Adds variety while maintaining continuity |
+| **Find quality sweet spot** | `byMedianDifference` | Targets tags that are neither too general nor too specific |
+| **Cleanup overly specific** | `uniformLowUsage` | Merges single-use tags into more general ones |
+| **Comprehensive coverage** | Combined provider | Mix multiple strategies for diverse suggestions |
+
+### Example Workflow
+
+1. **First session**: Use `topTagsByLinkCount` to get baseline suggestions on high-impact tags
+2. **Follow-up sessions**: Use `byAiSuggestionCount` or `byAiSuggestionCountCapped` to continue working through previously suggested tags
+3. **Cleanup session**: Use `uniformLowUsage` to merge overly specific single-use tags
+4. **Quality session**: Use `byMedianDifference` to find tags in the goldilocks zone
 
 ## Integration with AI Suggestions
 
@@ -159,7 +274,7 @@ const userTags: TagCandidate[] = await getTagMergeCandidates(userId);
 
 ## Future Enhancements
 
-### Similarity-Based Provider
+### Similarity-Based Provider (Planned)
 
 ```typescript
 export const similarNameTags = async (userId: number): Promise<TagCandidate[]> => {
@@ -167,27 +282,38 @@ export const similarNameTags = async (userId: number): Promise<TagCandidate[]> =
   // 2. Group by similarity (Levenshtein distance, soundex, etc.)
   // 3. Return tags that have similar names
   // 4. Focus on likely duplicates
+  // Use cases: Find "AI" vs "ai", "JavaScript" vs "Javascript", etc.
 };
 ```
 
-### Smart Hybrid Provider
+### Smart Hybrid Provider (Planned)
 
 ```typescript
 export const smartHybridProvider = async (userId: number): Promise<TagCandidate[]> => {
-  // 1. Get top 150 by usage (high impact)
+  // 1. Get top 150 by aiSuggestionCount (repeatedly problematic)
   // 2. Get 100 similar name clusters (likely duplicates)
-  // 3. Get 50 low-usage tags (cleanup candidates)
-  // 4. Combine intelligently
+  // 3. Get 50 single-link tags (cleanup candidates)
+  // 4. Combine intelligently with deduplication
 };
 ```
 
-### AI-Powered Pre-filtering
+### AI-Powered Pre-filtering (Planned)
 
 ```typescript
 export const aiFilteredProvider = async (userId: number): Promise<TagCandidate[]> => {
   // 1. Get broader set (e.g., 1000 tags)
   // 2. Use lightweight AI to pre-filter to most promising candidates
   // 3. Return top 300 most likely to benefit from merging
+  // Could use embedding similarity, pattern matching, etc.
+};
+```
+
+### Time-Based Provider (Planned)
+
+```typescript
+export const recentlyAddedTags = async (userId: number): Promise<TagCandidate[]> => {
+  // Focus on recently created tags that might need cleanup
+  // Useful for catching mistakes early
 };
 ```
 
@@ -206,24 +332,46 @@ To test a new provider:
 
 ## Configuration
 
+### Environment-Based Provider Selection (Planned)
+
 Future: Add environment variable to select provider:
 
 ```env
-TAG_MERGE_PROVIDER=topByUsage     # Default
-TAG_MERGE_PROVIDER=similarNames   # Focus on duplicates
-TAG_MERGE_PROVIDER=lowUsage       # Focus on cleanup
-TAG_MERGE_PROVIDER=smart          # Hybrid approach
+TAG_MERGE_PROVIDER=topByUsage          # Default: Most-used tags
+TAG_MERGE_PROVIDER=aiSuggestionCount   # Weighted by AI suggestion count
+TAG_MERGE_PROVIDER=aiSuggestionCapped  # Capped AI suggestion count
+TAG_MERGE_PROVIDER=medianDifference    # Distance from median
+TAG_MERGE_PROVIDER=uniformLowUsage     # Single-link tags only
+TAG_MERGE_PROVIDER=combined            # Hybrid approach
 ```
 
 Then in code:
 ```typescript
 const getConfiguredProvider = (): TagCandidateProvider => {
   switch (process.env.TAG_MERGE_PROVIDER) {
-    case 'similarNames': return similarNameTags;
-    case 'lowUsage': return lowUsageTags;
+    case 'aiSuggestionCount': return byAiSuggestionCount;
+    case 'aiSuggestionCapped': return (uid) => byAiSuggestionCountCapped(uid, 300, 10);
+    case 'medianDifference': return byMedianDifference;
+    case 'uniformLowUsage': return uniformLowUsage;
+    case 'combined': return combinedProvider;
     default: return (uid) => topTagsByLinkCount(uid, 300);
   }
 };
 
 const candidates = await getTagMergeCandidates(userId, getConfiguredProvider());
+```
+
+### Per-Request Provider Selection (Current)
+
+Currently, you can change the provider by modifying `getAiMergeSuggestions.ts`:
+
+```typescript
+// Change this line:
+const userTags: TagCandidate[] = await getTagMergeCandidates(userId);
+
+// To this (example):
+const userTags: TagCandidate[] = await getTagMergeCandidates(
+  userId,
+  byAiSuggestionCount
+);
 ```
