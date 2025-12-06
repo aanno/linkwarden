@@ -151,31 +151,58 @@ export default async function getAiMergeSuggestions(userId: number) {
     });
 
     // Map tag names back to IDs and add URLs
-    const suggestions = object.map((suggestion) => {
-      const tagDetails = suggestion.tags.map((tagName) => {
-        const tag = userTags.find((t) => t.name === tagName);
-        if (!tag) {
+    const suggestions = object
+      .filter((suggestion) => {
+        // Filter out suggestions with invalid schema (e.g., newNameName instead of newName)
+        // This prevents one bad suggestion from breaking the entire response
+        if (!suggestion.newName || typeof suggestion.newName !== 'string') {
+          console.warn('Skipping suggestion with invalid newName:', suggestion);
+          return false;
+        }
+        if (!suggestion.tags || !Array.isArray(suggestion.tags)) {
+          console.warn('Skipping suggestion with invalid tags:', suggestion);
+          return false;
+        }
+        if (!suggestion.reason || typeof suggestion.reason !== 'string') {
+          console.warn('Skipping suggestion with invalid reason:', suggestion);
+          return false;
+        }
+        return true;
+      })
+      .map((suggestion) => {
+        const tagDetails = suggestion.tags.map((tagName) => {
+          const tag = userTags.find((t) => t.name === tagName);
+          if (!tag) {
+            return null;
+          }
+          return {
+            id: tag.id,
+            name: tag.name,
+            linkCount: tag.linkCount,
+            url: `/tags/${tag.id}`,
+          };
+        }).filter(Boolean); // Remove nulls (tags that weren't found)
+
+        // Only include suggestions where we found at least 2 tags
+        if (tagDetails.length < 2) {
           return null;
         }
+
+        // Generate stable ID based on sorted tag IDs
+        // This ensures the same suggestion always has the same ID, even if array order changes
+        const suggestionId = tagDetails
+          .map(t => t?.id ?? 0)
+          .sort((a, b) => a - b)
+          .join('-');
+
         return {
-          id: tag.id,
-          name: tag.name,
-          linkCount: tag.linkCount,
-          url: `/tags/${tag.id}`,
+          id: suggestionId,
+          newName: suggestion.newName,
+          tags: tagDetails,
+          reason: suggestion.reason,
         };
-      }).filter(Boolean); // Remove nulls (tags that weren't found)
-
-      // Only include suggestions where we found at least 2 tags
-      if (tagDetails.length < 2) {
-        return null;
-      }
-
-      return {
-        newName: suggestion.newName,
-        tags: tagDetails,
-        reason: suggestion.reason,
-      };
-    }).filter(Boolean); // Remove null suggestions
+      })
+      .filter(Boolean); // Remove null suggestions
 
     // Increment ai_suggestion_count for all tags that appear in suggestions
     // Note: Some tags may have been merged/deleted since candidate selection
