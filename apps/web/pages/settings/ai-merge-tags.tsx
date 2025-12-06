@@ -387,7 +387,7 @@ export default function AiMergeTags() {
                               }
                             }}
                             autoFocus
-                            className="font-semibold text-lg px-2 py-1 border-2 border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+                            className="font-semibold text-lg px-2 py-1 border-2 border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900 bg-white"
                             maxLength={50}
                             placeholder="Enter tag name"
                           />
@@ -501,11 +501,13 @@ export default function AiMergeTags() {
                                 return newMap;
                               });
                             }}
-                            label="Set as additional tag (don't merge)"
+                            label={
+                              additionalTagMode.get(suggestion.id)
+                                ? "Set as additional tag (don't merge)"
+                                : "Merge tags (don't add)"
+                            }
+                            className="[&_.label-text]:text-gray-900 [&_.label-text]:font-medium"
                           />
-                          <p className="text-xs text-gray-500 ml-6 mt-1">
-                            This will add "<strong className="text-gray-700">{getNewTagName(suggestion.id, suggestion)}</strong>" to all links with the selected tags, without removing the original tags.
-                          </p>
                         </div>
                       )}
                     </div>
