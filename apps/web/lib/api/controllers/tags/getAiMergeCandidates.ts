@@ -75,7 +75,7 @@ export const byAiSuggestionCount = async (
       SELECT
         t.id,
         t.name,
-        COUNT(ltj.id) as "linkCount"
+        COUNT(ltj."A") as "linkCount"
       FROM "Tag" t
       LEFT JOIN "_LinkToTag" ltj ON t.id = ltj."B"
       WHERE t."ownerId" = ${userId}
@@ -119,7 +119,7 @@ export const byAiSuggestionCountCapped = async (
       SELECT
         t.id,
         t.name,
-        COUNT(ltj.id) as "linkCount"
+        COUNT(ltj."A") as "linkCount"
       FROM "Tag" t
       LEFT JOIN "_LinkToTag" ltj ON t.id = ltj."B"
       WHERE t."ownerId" = ${userId}
@@ -176,7 +176,7 @@ export const byMedianDifference = async (
       SELECT
         t.id,
         t.name,
-        COUNT(ltj.id) as "linkCount"
+        COUNT(ltj."A") as "linkCount"
       FROM "Tag" t
       LEFT JOIN "_LinkToTag" ltj ON t.id = ltj."B"
       WHERE t."ownerId" = ${userId}
@@ -218,12 +218,12 @@ export const uniformLowUsage = async (
       SELECT
         t.id,
         t.name,
-        COUNT(ltj.id) as "linkCount"
+        COUNT(ltj."A") as "linkCount"
       FROM "Tag" t
       LEFT JOIN "_LinkToTag" ltj ON t.id = ltj."B"
       WHERE t."ownerId" = ${userId}
       GROUP BY t.id, t.name
-      HAVING COUNT(ltj.id) = 1
+      HAVING COUNT(ltj."A") = 1
       ORDER BY RANDOM()
       LIMIT ${limit}
     `
