@@ -177,8 +177,9 @@ export default async function getAiMergeSuggestions(userId: number) {
       };
     }).filter(Boolean); // Remove null suggestions
 
-    // Re-validate all tag IDs to ensure they still exist in the database
-    // This prevents stale references to tags that were merged/deleted
+    // Increment ai_suggestion_count for all tags that appear in suggestions
+    // Note: Some tags may have been merged/deleted since candidate selection
+    // We handle this gracefully in the merge operation itself
     const tagIdsInSuggestions = new Set<number>();
     (suggestions as Array<NonNullable<typeof suggestions[number]>>).forEach((suggestion) => {
       suggestion.tags.forEach((tag) => {
@@ -189,36 +190,13 @@ export default async function getAiMergeSuggestions(userId: number) {
     });
 
     if (tagIdsInSuggestions.size > 0) {
-      // Get currently existing tags
-      const existingTags = await prisma.tag.findMany({
-        where: {
-          id: { in: Array.from(tagIdsInSuggestions) },
-          ownerId: userId,
-        },
-        select: { id: true },
-      });
-
-      const existingTagIds = new Set(existingTags.map((t) => t.id));
-
-      // Filter out suggestions that contain deleted/merged tags
-      const validSuggestions = (suggestions as Array<NonNullable<typeof suggestions[number]>>).filter((suggestion) => {
-        return suggestion.tags.every((tag) => tag && existingTagIds.has(tag.id));
-      });
-
-      // Only increment counts for tags that still exist
-      const validTagIds = Array.from(existingTagIds);
-      if (validTagIds.length > 0) {
-        await prisma.$executeRaw`
-          UPDATE "Tag"
-          SET "aiSuggestionCount" = "aiSuggestionCount" + 1
-          WHERE "id" = ANY(${validTagIds}::int[])
-        `;
-      }
-
-      return {
-        response: { suggestions: validSuggestions },
-        status: 200,
-      };
+      // Increment counts - tags that don't exist anymore will be silently skipped by the WHERE clause
+      await prisma.$executeRaw`
+        UPDATE "Tag"
+        SET "aiSuggestionCount" = "aiSuggestionCount" + 1
+        WHERE "id" = ANY(${Array.from(tagIdsInSuggestions)}::int[])
+          AND "ownerId" = ${userId}
+      `;
     }
 
     return {

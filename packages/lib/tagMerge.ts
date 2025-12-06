@@ -27,8 +27,11 @@ export async function performTagMerge(options: MergeTagsOptions) {
     },
   });
 
+  // Extract IDs of tags that actually exist
+  const existingTagIds = existingTags.map((t) => t.id);
+
   // If no tags exist, they were already merged - return early
-  if (existingTags.length === 0) {
+  if (existingTagIds.length === 0) {
     // Check if the target tag already exists and return it
     const existingTargetTag = await prisma.tag.findUnique({
       where: {
@@ -44,9 +47,21 @@ export async function performTagMerge(options: MergeTagsOptions) {
     throw new Error("Tags to merge no longer exist and target tag not found");
   }
 
+  // If only 1 tag exists and it has the target name, nothing to do - just return it
+  if (existingTagIds.length === 1) {
+    const singleTag = existingTags[0];
+    if (singleTag.name === newTagName) {
+      return await prisma.tag.findUniqueOrThrow({
+        where: { id: singleTag.id },
+      });
+    }
+    // Single tag but different name - proceed with rename
+  }
+
   // Check if one of the tags being merged already has the target name
   const tagWithTargetName = existingTags.find((t) => t.name === newTagName);
 
+  // Find all links that have ANY of the existing tags (not the original tagIds)
   let affectedLinks: number[];
 
   affectedLinks = (
@@ -55,7 +70,7 @@ export async function performTagMerge(options: MergeTagsOptions) {
         tags: {
           some: {
             id: {
-              in: tagIds,
+              in: existingTagIds, // ✅ Use only existing tag IDs
             },
             ownerId: userId,
           },

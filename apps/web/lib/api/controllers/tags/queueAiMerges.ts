@@ -17,36 +17,53 @@ export default async function queueAiMerges(
   const { merges } = dataValidation.data;
 
   try {
-    // Validate that all tags belong to the user
+    // Validate tags and filter out any that don't exist or don't belong to user
+    // This handles stale references gracefully (tags merged/deleted since suggestion generation)
     const allTagIds = merges.flatMap((m) => m.tagIds);
-    const tagCount = await prisma.tag.count({
+    const existingTags = await prisma.tag.findMany({
       where: {
         id: { in: allTagIds },
         ownerId: userId,
       },
+      select: { id: true },
     });
 
-    if (tagCount !== allTagIds.length) {
+    const existingTagIds = new Set(existingTags.map((t) => t.id));
+
+    // Filter merges to only include those with valid tags
+    // A merge is valid if it has at least 2 existing tags
+    const validMerges = merges.filter((merge) => {
+      const validTagIds = merge.tagIds.filter((id) => existingTagIds.has(id));
+      return validTagIds.length >= 2;
+    }).map((merge) => ({
+      userId,
+      newTagName: merge.newTagName,
+      tagIds: merge.tagIds.filter((id) => existingTagIds.has(id)),
+      status: "PENDING" as const,
+    }));
+
+    if (validMerges.length === 0) {
       return {
-        response: "Error: Some tags do not exist or do not belong to you",
-        status: 403,
+        response: "Error: No valid merges found. All referenced tags have been deleted or merged already.",
+        status: 400,
       };
     }
 
-    // Create merge jobs
+    // Create merge jobs for valid merges only
     const jobs = await prisma.tagMergeJob.createMany({
-      data: merges.map((merge) => ({
-        userId,
-        newTagName: merge.newTagName,
-        tagIds: merge.tagIds,
-        status: "PENDING",
-      })),
+      data: validMerges,
     });
+
+    const skippedCount = merges.length - jobs.count;
+    const message = skippedCount > 0
+      ? `Successfully queued ${jobs.count} merge operations (${skippedCount} skipped due to missing tags)`
+      : `Successfully queued ${jobs.count} merge operations`;
 
     return {
       response: {
-        message: `Successfully queued ${jobs.count} merge operations`,
+        message,
         jobsCreated: jobs.count,
+        skipped: skippedCount,
       },
       status: 200,
     };
