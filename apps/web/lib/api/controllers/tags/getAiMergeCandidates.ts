@@ -237,6 +237,40 @@ export const uniformLowUsage = async (
 };
 
 /**
+ * Combined provider: Mix of three strategies for comprehensive coverage
+ * - 150 tags from byAiSuggestionCountCapped (variety + continuity)
+ * - 150 tags from byMedianDifference (quality sweet spot)
+ * - 150 tags from uniformLowUsage (cleanup overly specific tags)
+ *
+ * Deduplicates by tag ID to avoid suggesting the same tag multiple times
+ *
+ * @param userId - The user ID to fetch tags for
+ * @returns Array of unique tag candidates (up to 450 tags, less after deduplication)
+ */
+export const combinedProvider = async (
+  userId: number
+): Promise<TagCandidate[]> => {
+  // Fetch from all three providers in parallel
+  const [cappedTags, medianTags, lowUsageTags] = await Promise.all([
+    byAiSuggestionCountCapped(userId, 150, 10),
+    byMedianDifference(userId, 150),
+    uniformLowUsage(userId, 150),
+  ]);
+
+  // Use Map for deduplication by tag ID (keeps first occurrence)
+  const uniqueTagsMap = new Map<number, TagCandidate>();
+
+  // Add tags from each provider (order determines priority for duplicates)
+  [...cappedTags, ...medianTags, ...lowUsageTags].forEach((tag) => {
+    if (!uniqueTagsMap.has(tag.id)) {
+      uniqueTagsMap.set(tag.id, tag);
+    }
+  });
+
+  return Array.from(uniqueTagsMap.values());
+};
+
+/**
  * Alternative provider: Returns tags with similar names
  * This focuses on tags that are likely duplicates based on fuzzy matching
  * (Not yet implemented - placeholder for future enhancement)

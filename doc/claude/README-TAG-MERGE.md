@@ -27,7 +27,25 @@ export type TagCandidateProvider = (userId: number) => Promise<TagCandidate[]>;
 
 ## Available Providers
 
-### 1. `topTagsByLinkCount` (Default)
+### 1. `combinedProvider` ✅ **Default (Currently Active)**
+
+Combines three strategies for comprehensive coverage with automatic deduplication.
+
+**Mix**:
+- 150 tags from `byAiSuggestionCountCapped` (variety + continuity)
+- 150 tags from `byMedianDifference` (quality sweet spot)
+- 150 tags from `uniformLowUsage` (cleanup overly specific tags)
+
+**Rationale**: Provides diverse suggestions covering continuity, quality, and cleanup in a single run. Deduplicates by tag ID to avoid repetition.
+
+**Usage**:
+```typescript
+const candidates = await combinedProvider(userId); // Returns up to 450 unique tags
+```
+
+**Returns**: Up to 450 tags (less after deduplication)
+
+### 2. `topTagsByLinkCount`
 
 Returns the top N tags sorted by usage (link count, descending).
 
@@ -40,7 +58,7 @@ const candidates = await topTagsByLinkCount(userId, 300); // Returns top 300 tag
 
 **Default limit**: 300 tags (to avoid overwhelming the AI)
 
-### 2. `byAiSuggestionCount` ✅ **Implemented**
+### 3. `byAiSuggestionCount` ✅ **Implemented**
 
 Selects tags weighted by `aiSuggestionCount` using probabilistic sampling.
 
@@ -55,7 +73,7 @@ const candidates = await byAiSuggestionCount(userId, 300);
 
 **Notes**: Only selects tags where `aiSuggestionCount > 0`
 
-### 3. `byAiSuggestionCountCapped` ✅ **Implemented**
+### 4. `byAiSuggestionCountCapped` ✅ **Implemented**
 
 Same as `byAiSuggestionCount` but with a maximum weight cap.
 
@@ -74,7 +92,7 @@ const candidates = await byAiSuggestionCountCapped(userId, 300, 10);
 - `limit`: Number of tags to select (default: 300)
 - `maxWeight`: Maximum weight cap (default: 10)
 
-### 4. `byMedianDifference` ✅ **Implemented**
+### 5. `byMedianDifference` ✅ **Implemented**
 
 Selects tags weighted by their distance from the median `aiSuggestionCount`.
 
@@ -92,7 +110,7 @@ const candidates = await byMedianDifference(userId, 300);
 
 **Notes**: Good for finding tags in the quality sweet spot
 
-### 5. `uniformLowUsage` ✅ **Implemented**
+### 6. `uniformLowUsage` ✅ **Implemented**
 
 Uniformly selects random tags that have exactly 1 link.
 
@@ -107,7 +125,7 @@ const candidates = await uniformLowUsage(userId, 300);
 
 **Notes**: Only returns tags with exactly 1 link (linkCount = 1)
 
-### 6. `similarNameTags` (Not Yet Implemented)
+### 7. `similarNameTags` (Not Yet Implemented)
 
 Returns tags with similar names that are likely duplicates.
 
@@ -122,13 +140,13 @@ Returns tags with similar names that are likely duplicates.
 
 ### Basic Usage (Default Provider)
 
-The default provider is automatically used:
+The default provider is now `combinedProvider`:
 
 ```typescript
-import { getTagMergeCandidates } from './getAiMergeCandidates';
+import { getTagMergeCandidates, combinedProvider } from './getAiMergeCandidates';
 
-// Uses topTagsByLinkCount with limit=300 by default
-const candidates = await getTagMergeCandidates(userId);
+// Uses combinedProvider by default (150 capped + 150 median + 150 low usage)
+const candidates = await getTagMergeCandidates(userId, combinedProvider);
 ```
 
 ### Using a Different Provider
@@ -209,30 +227,33 @@ export const randomTags: TagCandidateProvider = async (userId: number) => {
 const candidates = await getTagMergeCandidates(userId, randomTags);
 ```
 
-### Combining Multiple Providers
+### Combining Multiple Providers ✅ **Now Active**
 
-You can create a provider that combines results from multiple strategies:
+The `combinedProvider` is now implemented and active by default:
 
 ```typescript
 export const combinedProvider: TagCandidateProvider = async (userId: number) => {
-  // Get 150 tags weighted by AI suggestion count (problematic tags)
-  const aiTags = await byAiSuggestionCount(userId, 150);
+  // Fetch from all three providers in parallel
+  const [cappedTags, medianTags, lowUsageTags] = await Promise.all([
+    byAiSuggestionCountCapped(userId, 150, 10),
+    byMedianDifference(userId, 150),
+    uniformLowUsage(userId, 150),
+  ]);
 
-  // Get 100 single-link tags for cleanup
-  const lowTags = await uniformLowUsage(userId, 100);
+  // Use Map for deduplication by tag ID (keeps first occurrence)
+  const uniqueTagsMap = new Map<number, TagCandidate>();
 
-  // Get 50 tags near median (balanced selection)
-  const medianTags = await byMedianDifference(userId, 50);
+  [...cappedTags, ...medianTags, ...lowUsageTags].forEach((tag) => {
+    if (!uniqueTagsMap.has(tag.id)) {
+      uniqueTagsMap.set(tag.id, tag);
+    }
+  });
 
-  // Combine and deduplicate by ID
-  const combined = [...aiTags, ...lowTags, ...medianTags];
-  const unique = Array.from(
-    new Map(combined.map(tag => [tag.id, tag])).values()
-  );
-
-  return unique.slice(0, 300); // Limit total
+  return Array.from(uniqueTagsMap.values());
 };
 ```
+
+**Location**: `apps/web/lib/api/controllers/tags/getAiMergeCandidates.ts:250`
 
 ## When to Use Which Provider
 
@@ -240,15 +261,19 @@ export const combinedProvider: TagCandidateProvider = async (userId: number) => 
 
 | Use Case | Recommended Provider | Why |
 |----------|---------------------|-----|
-| **First time / General** | `topTagsByLinkCount` | Safe default, focuses on high-impact tags |
+| **Default / Comprehensive** | `combinedProvider` ✅ | Mix of continuity, quality, and cleanup in one run |
+| **High-impact tags only** | `topTagsByLinkCount` | Focuses on most-used tags |
 | **Continue where left off** | `byAiSuggestionCount` | Resuggests previously seen tags for workflow continuity |
 | **Avoid boredom** | `byAiSuggestionCountCapped` | Adds variety while maintaining continuity |
 | **Find quality sweet spot** | `byMedianDifference` | Targets tags that are neither too general nor too specific |
 | **Cleanup overly specific** | `uniformLowUsage` | Merges single-use tags into more general ones |
-| **Comprehensive coverage** | Combined provider | Mix multiple strategies for diverse suggestions |
 
 ### Example Workflow
 
+**Option 1: Comprehensive (Recommended)**
+- Use `combinedProvider` for all sessions - it covers continuity, quality, and cleanup automatically
+
+**Option 2: Focused Sessions**
 1. **First session**: Use `topTagsByLinkCount` to get baseline suggestions on high-impact tags
 2. **Follow-up sessions**: Use `byAiSuggestionCount` or `byAiSuggestionCountCapped` to continue working through previously suggested tags
 3. **Cleanup session**: Use `uniformLowUsage` to merge overly specific single-use tags

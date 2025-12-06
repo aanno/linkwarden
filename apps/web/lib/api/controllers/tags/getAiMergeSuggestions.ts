@@ -10,7 +10,7 @@ import { z } from "zod";
 import { anthropic } from "@ai-sdk/anthropic";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { createOllama } from "ollama-ai-provider";
-import { getTagMergeCandidates, TagCandidate } from "./getAiMergeCandidates";
+import { getTagMergeCandidates, TagCandidate, combinedProvider } from "./getAiMergeCandidates";
 
 // Function to concat /api with the base URL properly
 const ensureValidURL = (base: string, path: string) =>
@@ -124,9 +124,10 @@ export default async function getAiMergeSuggestions(userId: number) {
       };
     }
 
-    // Fetch tag merge candidates using the pluggable provider
-    // By default, this uses topTagsByLinkCount which takes top 300 tags
-    const userTags: TagCandidate[] = await getTagMergeCandidates(userId);
+    // Fetch tag merge candidates using the combined provider
+    // This uses: 150 byAiSuggestionCountCapped + 150 byMedianDifference + 150 uniformLowUsage
+    // Deduplicates by tag ID for unique results
+    const userTags: TagCandidate[] = await getTagMergeCandidates(userId, combinedProvider);
 
     if (userTags.length < 10) {
       return {
