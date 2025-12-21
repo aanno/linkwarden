@@ -283,6 +283,18 @@ export const MergeTagsSchema = z.object({
 
 export type MergeTagsSchemaType = z.infer<typeof MergeTagsSchema>;
 
+export const QueueAiMergesSchema = z.object({
+  merges: z.array(
+    z.object({
+      newTagName: z.string().trim().max(50),
+      tagIds: z.array(z.number()).min(2), // Must have at least 2 tags to merge/add
+      mode: z.enum(['merge', 'additional']).default('merge'), // FEATURE #4: merge or add as additional tag
+    })
+  ).min(1).max(100), // Allow 1-100 merge operations at once
+});
+
+export type QueueAiMergesSchemaType = z.infer<typeof QueueAiMergesSchema>;
+
 export const PostHighlightSchema = z.object({
   color: z.string().trim().max(50),
   comment: z.string().trim().max(2048).nullish(),

@@ -81,6 +81,20 @@ export default function SettingsSidebar({ className }: { className?: string }) {
           </div>
         </Link>
 
+        <Link href="/settings/ai-merge-tags">
+          <div
+            className={`${
+              active === "/settings/ai-merge-tags" ||
+              active?.startsWith("/settings/ai-merge-tags")
+                ? "bg-primary/20"
+                : "hover:bg-neutral/20"
+            } duration-100 py-5 px-2 cursor-pointer flex items-center gap-2 w-full rounded-md h-8`}
+          >
+            <i className="bi-magic text-primary text-xl"></i>
+            <p className="truncate w-full pr-7">{t("ai_merge_tags")}</p>
+          </div>
+        </Link>
+
         <Link href="/settings/rss-subscriptions">
           <div
             className={`${
