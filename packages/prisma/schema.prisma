@@ -49,6 +49,7 @@ model User {
   whitelistedUsers        WhitelistedUser[]
   accessTokens            AccessToken[]
   subscriptions           Subscription?
+  tagMergeJobs            TagMergeJob[]
   linksRouteTo            LinksRouteTo          @default(ORIGINAL)
   aiTaggingMethod         AiTaggingMethod       @default(DISABLED)
   aiPredefinedTags        String[]              @default([])
@@ -210,11 +211,36 @@ model Tag {
   archiveAsWaybackMachine Boolean?
   aiTag                   Boolean?
   aiGenerated             Boolean  @default(false)
+  aiSuggestionCount       Int      @default(0)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @default(now()) @updatedAt
 
   @@unique([name, ownerId])
   @@index([ownerId])
+}
+
+enum TagMergeJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model TagMergeJob {
+  id          Int                @id @default(autoincrement())
+  userId      Int
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newTagName  String
+  tagIds      Int[]
+  mode        String             @default("merge") // FEATURE #4: "merge" or "additional"
+  status      TagMergeJobStatus  @default(PENDING)
+  error       String?
+  createdAt   DateTime           @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime           @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 model Subscription {

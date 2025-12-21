@@ -2,8 +2,11 @@ import {
   MergeTagsSchema,
   MergeTagsSchemaType,
 } from "@linkwarden/lib/schemaValidation";
-import { prisma } from "@linkwarden/prisma";
+import { performTagMerge } from "@linkwarden/lib";
 
+/**
+ * API endpoint wrapper with validation
+ */
 export default async function mergeTags(
   userId: number,
   body: MergeTagsSchemaType
@@ -21,59 +24,13 @@ export default async function mergeTags(
 
   const { tagIds, newTagName } = dataValidation.data;
 
-  let affectedLinks: number[];
-
-  affectedLinks = (
-    await prisma.link.findMany({
-      where: {
-        tags: {
-          some: {
-            id: {
-              in: tagIds,
-            },
-            ownerId: userId,
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    })
-  ).map((link) => link.id);
-
-  const { newTag } = await prisma.$transaction(async (tx) => {
-    await tx.tag.deleteMany({
-      where: {
-        ownerId: userId,
-        id: {
-          in: tagIds,
-        },
-      },
-    });
-
-    const newTag = await tx.tag.create({
-      data: {
-        name: newTagName,
-        ownerId: userId,
-        links: {
-          connect: affectedLinks.map((id) => ({ id })),
-        },
-      },
-    });
-
-    await tx.link.updateMany({
-      where: {
-        id: {
-          in: affectedLinks,
-        },
-      },
-      data: {
-        indexVersion: null,
-      },
-    });
-
-    return { newTag };
-  });
-
-  return { response: newTag, status: 200 };
+  try {
+    const newTag = await performTagMerge({ userId, tagIds, newTagName });
+    return { response: newTag, status: 200 };
+  } catch (err) {
+    return {
+      response: `Error merging tags: ${err instanceof Error ? err.message : "Unknown error"}`,
+      status: 500,
+    };
+  }
 }

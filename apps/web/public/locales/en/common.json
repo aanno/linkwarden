@@ -551,5 +551,15 @@
   "regenerate_broken_preserved_content_desc": "<0>Delete and re-preserve broken links with at least one missing preserved format.</0><0>This action will immediately delete any existing preserved format for {{count}} links.</0><0>Affected links will be scheduled to have their preserved formats rebuilt.</0>",
   "delete_all_preserved_content_and_regenerate_desc": "<0>This action will immediately delete all your existing preserved formats.</0><0>Affected links will be scheduled to have their preserved formats rebuilt.</0>",
   "note": "Note",
-  "search_unindexed_links_in_bg_info": "Search may be less accurate because some links are still being processed."
+  "search_unindexed_links_in_bg_info": "Search may be less accurate because some links are still being processed.",
+  "ai_merge_tags": "AI Tag Merging",
+  "ai_merge_tags_description": "Use AI to automatically detect and suggest tag merges to improve organization",
+  "generating_suggestions": "Generating merge suggestions with AI...",
+  "no_merge_suggestions": "No merge suggestions available",
+  "no_merge_suggestions_description": "Your tags are already well organized! No duplicates or variations detected.",
+  "select_all": "Select All",
+  "deselect_all": "Deselect All",
+  "merge_selected_count": "Merge Selected ({{count}})",
+  "of": "of",
+  "selected": "selected"
 }
