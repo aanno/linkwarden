@@ -1,0 +1,997 @@
+{
+  "summary": {
+    "total_merges": 72,
+    "tags_saved": 73,
+    "german_tags": 111,
+    "year_tags": 1,
+    "single_link_tags": 2263,
+    "single_link_to_remove": 2117
+  },
+  "phase1_case_plural": [
+    {
+      "primary": "AI",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "ai",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 38,
+      "savings": 1
+    },
+    {
+      "primary": "Courses",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Course",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 22,
+      "savings": 1
+    },
+    {
+      "primary": "API",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Apis",
+          "linkCount": 3
+        }
+      ],
+      "total_links": 15,
+      "savings": 1
+    },
+    {
+      "primary": "Networking",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Network",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 14,
+      "savings": 1
+    },
+    {
+      "primary": "Self-hosted",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Self-host",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 12,
+      "savings": 1
+    },
+    {
+      "primary": "Container",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Containers",
+          "linkCount": 4
+        }
+      ],
+      "total_links": 14,
+      "savings": 1
+    },
+    {
+      "primary": "Upskilling",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Upskill",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 11,
+      "savings": 1
+    },
+    {
+      "primary": "Ai Agents",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Ai Agent",
+          "linkCount": 3
+        }
+      ],
+      "total_links": 12,
+      "savings": 1
+    },
+    {
+      "primary": "Tutorial",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Tutorials",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 9,
+      "savings": 1
+    },
+    {
+      "primary": "Deployment",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Deployments",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 9,
+      "savings": 1
+    },
+    {
+      "primary": "Servers",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Server",
+          "linkCount": 8
+        }
+      ],
+      "total_links": 16,
+      "savings": 1
+    },
+    {
+      "primary": "Llms",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "LLM",
+          "linkCount": 1
+        },
+        {
+          "suffix": 2,
+          "original": "llm",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 10,
+      "savings": 2
+    },
+    {
+      "primary": "Git",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "git",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 10,
+      "savings": 1
+    },
+    {
+      "primary": "Specification",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Specifications",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 8,
+      "savings": 1
+    },
+    {
+      "primary": "Download",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Downloads",
+          "linkCount": 4
+        }
+      ],
+      "total_links": 11,
+      "savings": 1
+    },
+    {
+      "primary": "Application",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Applications",
+          "linkCount": 3
+        }
+      ],
+      "total_links": 10,
+      "savings": 1
+    },
+    {
+      "primary": "Mcp Server",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Mcp Servers",
+          "linkCount": 4
+        }
+      ],
+      "total_links": 11,
+      "savings": 1
+    },
+    {
+      "primary": "Workflows",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Workflow",
+          "linkCount": 3
+        }
+      ],
+      "total_links": 9,
+      "savings": 1
+    },
+    {
+      "primary": "Parser",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Parsers",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 6,
+      "savings": 1
+    },
+    {
+      "primary": "Bookmarks",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Bookmark",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 6,
+      "savings": 1
+    },
+    {
+      "primary": "Platform",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Platforms",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 6,
+      "savings": 1
+    },
+    {
+      "primary": "Guide",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Guides",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 6,
+      "savings": 1
+    },
+    {
+      "primary": "Streaming",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Stream",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 7,
+      "savings": 1
+    },
+    {
+      "primary": "iOS",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "IO",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 5,
+      "savings": 1
+    },
+    {
+      "primary": "Packages",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Package",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 6,
+      "savings": 1
+    },
+    {
+      "primary": "Programming Languages",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Programming Language",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 5,
+      "savings": 1
+    },
+    {
+      "primary": "Updates",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Update",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 5,
+      "savings": 1
+    },
+    {
+      "primary": "Online-shop",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Online-shops",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 4,
+      "savings": 1
+    },
+    {
+      "primary": "Blog",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Blogs",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Devcontainers",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Devcontainer",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "CLI",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "cli",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 4,
+      "savings": 1
+    },
+    {
+      "primary": "Operations",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Operation",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Pull Request",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Pull Requests",
+          "linkCount": 2
+        }
+      ],
+      "total_links": 4,
+      "savings": 1
+    },
+    {
+      "primary": "Newsletter",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Newsletters",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Virtual Environment",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Virtual Environments",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Index",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Indexing",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Release",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Releases",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Self-hostable",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Self-host",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Go",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "go",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Agents",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Agent",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Jobs",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Job",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Frontier Models",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Frontier Model",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Software Engineering",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Software Engineer",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Subscriptions",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Subscription",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Filters",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Filter",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Beginners",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Beginner",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Container Runtime",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Container Runtimes",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Stream",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Streamable",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 3,
+      "savings": 1
+    },
+    {
+      "primary": "Source",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Sources",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "S3",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "s3",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Http Api",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Http Apis",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Basic",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Basics",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Prompts",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Prompt",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Forks",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Fork",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Dashboards",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Dashboard",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "E-mails",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "E-mail",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Unit Tests",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Unit Test",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Plans",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Plan",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Event",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Events",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Fixing",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "fix",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Mcp Integrations",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Mcp Integration",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Studie",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Studies",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Filesystem",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Filesystems",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "app",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Apps",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Generic",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Generics",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Changelog",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Changelogs",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Alternatives",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Alternative",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Pthread",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Pthreads",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Etfs",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "ETF",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Large Language Models",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Large Language Model",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Language Model",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Language Models",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    },
+    {
+      "primary": "Language Server",
+      "merges": [
+        {
+          "suffix": 1,
+          "original": "Language Servers",
+          "linkCount": 1
+        }
+      ],
+      "total_links": 2,
+      "savings": 1
+    }
+  ],
+  "phase2_german": {
+    "Aktienm\u00e4rkte": "[TRANSLATE: Aktienm\u00e4rkte]",
+    "Kursst\u00fcrze": "[TRANSLATE: Kursst\u00fcrze]",
+    "Gesch\u00e4ftsmodelle": "[TRANSLATE: Gesch\u00e4ftsmodelle]",
+    "Ausbildungspl\u00e4tze": "[TRANSLATE: Ausbildungspl\u00e4tze]",
+    "Jobb\u00f6rse": "[TRANSLATE: Jobb\u00f6rse]",
+    "Bundesagentur F\u00fcr Arbeit": "[TRANSLATE: Bundesagentur F\u00fcr Arbeit]",
+    "K\u00fcnstliche Intelligenz": "[TRANSLATE: K\u00fcnstliche Intelligenz]",
+    "Kostenloser Api-schl\u00fcssel": "[TRANSLATE: Kostenloser Api-schl\u00fcssel]",
+    "Julia Kl\u00f6ckner": "[TRANSLATE: Julia Kl\u00f6ckner]",
+    "F\u00f6rdergelder": "[TRANSLATE: F\u00f6rdergelder]",
+    "Politische Neutralit\u00e4t": "[TRANSLATE: Politische Neutralit\u00e4t]",
+    "Onleihe M\u00fcnchen": "[TRANSLATE]",
+    "Ki-pl\u00e4ne": "[TRANSLATE]",
+    "Verm\u00f6gensteuer": "[TRANSLATE]",
+    "\u00d6ffentlich": "[TRANSLATE]",
+    "Privatsph\u00e4re": "[TRANSLATE]",
+    "Ma\u00dfnahmen": "[TRANSLATE: Ma\u00dfnahmen]",
+    "W\u00e4hlerschaft": "[TRANSLATE]",
+    "Ssh-schl\u00fcssel": "[TRANSLATE]",
+    "Funktionalit\u00e4t": "[TRANSLATE]",
+    "Deb\u00fct": "[TRANSLATE]",
+    "Ausf\u00fchrung": "[TRANSLATE]",
+    "Produktivit\u00e4t": "[TRANSLATE: Produktivit\u00e4t]",
+    "B\u00fccher": "[TRANSLATE: B\u00fccher]",
+    "Unterst\u00fctzung": "[TRANSLATE]",
+    "Quarant\u00e4ne": "[TRANSLATE]",
+    "B\u00fccher Lentner": "[TRANSLATE]",
+    "Jan B\u00f6hmermann": "[TRANSLATE]",
+    "Mobilit\u00e4tsportal": "[TRANSLATE]",
+    "M\u00f6belbausystem": "[TRANSLATE]",
+    "Passwortgesch\u00fctzt": "[TRANSLATE: Passwortgesch\u00fctzt]",
+    "Gef\u00fchle Lesen": "[TRANSLATE]",
+    "Verteidigungsf\u00e4higkeit": "[TRANSLATE]",
+    "Geh\u00e4lter": "[TRANSLATE]",
+    "M\u00fcnchen-venedig": "[TRANSLATE]",
+    "M\u00fcnchen": "[TRANSLATE: M\u00fcnchen]",
+    "Popul\u00e4rkultur": "[TRANSLATE]",
+    "Vorw\u00e4rtsfehlerkorrektur": "[TRANSLATE]",
+    "Daten\u00fcbertragung": "[TRANSLATE]",
+    "T\u00fcv S\u00fcd": "[TRANSLATE]",
+    "\u00dcbersetzung": "[TRANSLATE: \u00dcbersetzung]",
+    "Ki-gest\u00fctzter Voice-generator": "[TRANSLATE]",
+    "\u00dcberarbeitung": "[TRANSLATE]",
+    "S\u00fcdroute": "[TRANSLATE]",
+    "Onlineh\u00e4ndler": "[TRANSLATE]",
+    "Z\u00fcrich": "[TRANSLATE]",
+    "H\u00f6hlenfunde": "[TRANSLATE]",
+    "Gr\u00fcnen": "[TRANSLATE]",
+    "Tech-milliard\u00e4r": "[TRANSLATE]",
+    "Parteigr\u00fcndung": "[TRANSLATE]",
+    "Pl\u00e4ne": "[TRANSLATE]",
+    "B\u00fchnenoutfits": "[TRANSLATE]",
+    "Mysteri\u00f6s": "[TRANSLATE]",
+    "Vollst\u00e4ndig Verwalteter Service": "[TRANSLATE]",
+    "Unterdr\u00fcckung": "[TRANSLATE]",
+    "\u00dcberblick Verlieren": "[TRANSLATE]",
+    "Svensk Komposit\u00f6r": "[TRANSLATE]",
+    "Popul\u00e4rmusik": "[TRANSLATE]",
+    "Komplexit\u00e4t": "[TRANSLATE]",
+    "Ver\u00e4nderung": "[TRANSLATE]",
+    "Sexualit\u00e4t": "[TRANSLATE]",
+    "\u00c4rztliche Versorgung": "[TRANSLATE]",
+    "Allesk\u00f6nner": "[TRANSLATE]",
+    "L\u00e4nder\u00fcbergreifend": "[TRANSLATE]",
+    "Agentur F\u00fcr Arbeit": "[TRANSLATE]",
+    "Nat\u00fcrliche Sprache": "[TRANSLATE]",
+    "Modeh\u00e4ndler": "[TRANSLATE]",
+    "Brachfl\u00e4chen": "[TRANSLATE]",
+    "St\u00e4dte": "[TRANSLATE]",
+    "Gr\u00fcne": "[TRANSLATE: Gr\u00fcne]",
+    "Metoo-aff\u00e4re": "[TRANSLATE]",
+    "Vorw\u00fcrfe": "[TRANSLATE]",
+    "Schweine-bet\u00e4ubung": "[TRANSLATE]",
+    "Gespr\u00e4ch": "[TRANSLATE]",
+    "Grafikkartenverk\u00e4ufe": "[TRANSLATE]",
+    "Estradas\u00e4nger": "[TRANSLATE]",
+    "Tragikom\u00f6die": "[TRANSLATE]",
+    "Russische S\u00e4ngerin": "[TRANSLATE: Russische S\u00e4ngerin]",
+    "D\u00fcnsten": "[TRANSLATE]",
+    "Ausgewogene K\u00fcche": "[TRANSLATE]",
+    "Finanzm\u00e4rkte": "[TRANSLATE]",
+    "Schn\u00e4ppchen": "[TRANSLATE]",
+    "K\u00fcsten": "[TRANSLATE]",
+    "K\u00f6lner Landgericht": "[TRANSLATE]",
+    "Ungew\u00f6hnlicher Fall": "[TRANSLATE]",
+    "Sch\u00e4den Regulieren": "[TRANSLATE]",
+    "\u00d6ffentliche Auftraggeber": "[TRANSLATE]",
+    "Tempor\u00e4re Cookies": "[TRANSLATE]",
+    "S\u00fcdkorea": "[TRANSLATE]",
+    "Pr\u00e4sidentenwahl": "[TRANSLATE]",
+    "J\u00fcrgen Rose": "[TRANSLATE]",
+    "Bundesb\u00fcrger": "[TRANSLATE]",
+    "Ausstellungser\u00f6ffnung": "[TRANSLATE]",
+    "St\u00e4dtische Galerie": "[TRANSLATE]",
+    "30-j\u00e4hriges Bestehen": "[TRANSLATE]",
+    "Flexibilit\u00e4t": "[TRANSLATE]",
+    "Online-jobb\u00f6rsen": "[TRANSLATE]",
+    "Abschl\u00e4ge": "[TRANSLATE]",
+    "Mediterrane K\u00fcche": "[TRANSLATE]",
+    "Kostenlose Getr\u00e4nke": "[TRANSLATE]",
+    "Fr\u00fcher Anwender": "[TRANSLATE]",
+    "Bundestagspr\u00e4sidentin": "[TRANSLATE]",
+    "Gr\u00fcne-jugend": "[TRANSLATE]",
+    "Qualit\u00e4tsjournalismus": "[TRANSLATE]",
+    "Hintergr\u00fcnde": "[TRANSLATE: Hintergr\u00fcnde]",
+    "Risikoma\u00dfe": "[TRANSLATE]",
+    "M\u00fcnchner Band": "[TRANSLATE]",
+    "Kurz & B\u00fcndig": "[TRANSLATE]",
+    "Outdoor-aktivit\u00e4ten": "[TRANSLATE]",
+    "Joe H\u00f6lzl": "[TRANSLATE]",
+    "S\u00e4ngerin": "[TRANSLATE]"
+  },
+  "phase3_years": {
+    "2025": "2020s"
+  }
+}

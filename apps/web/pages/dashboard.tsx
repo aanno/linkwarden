@@ -38,7 +38,9 @@ const Page: NextPageWithLayout = () => {
     ...dashboardData
   } = useDashboardData();
 
-  const { data: tags = [] } = useTags();
+  const { data: tagsData = { tags: [], total: 0 } } = useTags();
+  const tags = tagsData.tags;
+  const totalTagCount = tagsData.total || tags.length;
   const { data: user } = useUser();
 
   const [numberOfLinks, setNumberOfLinks] = useState(0);
@@ -160,6 +162,7 @@ const Page: NextPageWithLayout = () => {
               }
               links={links}
               tags={tags}
+                totalTagCount={totalTagCount}
               numberOfLinks={numberOfLinks}
               collectionsLength={collections.length}
               numberOfPinnedLinks={numberOfPinnedLinks}
@@ -216,6 +219,7 @@ type SectionProps = {
   collectionsLength: number;
   links: any[];
   tags: any[];
+  totalTagCount: number;
   numberOfLinks: number;
   numberOfPinnedLinks: number;
   dashboardData: any;
@@ -229,6 +233,7 @@ const Section = ({
   collection,
   links,
   tags,
+  totalTagCount,
   numberOfLinks,
   collectionsLength,
   numberOfPinnedLinks,
@@ -253,8 +258,8 @@ const Section = ({
           />
 
           <DashboardItem
-            name={tags.length === 1 ? t("tag") : t("tags")}
-            value={tags.length}
+            name={totalTagCount === 1 ? t("tag") : t("tags")}
+            value={totalTagCount}
             icon={"bi-hash"}
           />
 

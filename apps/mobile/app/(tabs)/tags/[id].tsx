@@ -22,13 +22,14 @@ export default function LinksScreen() {
     auth
   );
 
-  const tags = useTags(auth);
+  const tagsQuery = useTags(auth);
+  const tags = tagsQuery.data?.tags || [];
 
   const navigation = useNavigation();
   const isIOS26Plus = Platform.OS === "ios" && Number(Platform.Version) >= 26;
 
   useEffect(() => {
-    const activeTag = tags.data?.filter((e) => e.id === Number(id))[0];
+    const activeTag = tags?.filter((e) => e.id === Number(id))[0];
 
     if (activeTag?.name)
       navigation?.setOptions?.({
@@ -41,7 +42,7 @@ export default function LinksScreen() {
           }),
         },
       });
-  }, [navigation]);
+  }, [navigation, tags, id]);
 
   return (
     <View
