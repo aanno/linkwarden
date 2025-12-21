@@ -1,0 +1,672 @@
+{
+  "summary": {
+    "current_tags": 2939,
+    "target_tags": 1000,
+    "tags_to_remove": 1939,
+    "single_link_tags": 2263,
+    "german_tags": 118,
+    "merge_groups": 60
+  },
+  "proposals": [
+    {
+      "primary_tag": "AI",
+      "merge_from": [
+        "ai"
+      ],
+      "total_links": 38,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Courses",
+      "merge_from": [
+        "Course"
+      ],
+      "total_links": 22,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "API",
+      "merge_from": [
+        "Apis"
+      ],
+      "total_links": 15,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Networking",
+      "merge_from": [
+        "Network"
+      ],
+      "total_links": 14,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Self-hosted",
+      "merge_from": [
+        "Self-hostable",
+        "Self-host"
+      ],
+      "total_links": 14,
+      "tag_count": 3
+    },
+    {
+      "primary_tag": "Ai Agents",
+      "merge_from": [
+        "Ai Agent"
+      ],
+      "total_links": 12,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Download",
+      "merge_from": [
+        "Downloads"
+      ],
+      "total_links": 11,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Upskilling",
+      "merge_from": [
+        "Upskill"
+      ],
+      "total_links": 11,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Llms",
+      "merge_from": [
+        "LLM",
+        "llm"
+      ],
+      "total_links": 10,
+      "tag_count": 3
+    },
+    {
+      "primary_tag": "Git",
+      "merge_from": [
+        "git"
+      ],
+      "total_links": 10,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Tutorial",
+      "merge_from": [
+        "Tutorials"
+      ],
+      "total_links": 9,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Deployment",
+      "merge_from": [
+        "Deploy"
+      ],
+      "total_links": 9,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Workflows",
+      "merge_from": [
+        "Workflow"
+      ],
+      "total_links": 9,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Tracking",
+      "merge_from": [
+        "Tracker"
+      ],
+      "total_links": 9,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Streaming",
+      "merge_from": [
+        "Streamable",
+        "Stream"
+      ],
+      "total_links": 8,
+      "tag_count": 3
+    },
+    {
+      "primary_tag": "Parser",
+      "merge_from": [
+        "Parsing"
+      ],
+      "total_links": 7,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Platform",
+      "merge_from": [
+        "Platforms"
+      ],
+      "total_links": 6,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Bookmarks",
+      "merge_from": [
+        "Bookmark"
+      ],
+      "total_links": 6,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Packages",
+      "merge_from": [
+        "Package"
+      ],
+      "total_links": 6,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Guide",
+      "merge_from": [
+        "Guides"
+      ],
+      "total_links": 6,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "C",
+      "merge_from": [
+        "City"
+      ],
+      "total_links": 6,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Updates",
+      "merge_from": [
+        "Update"
+      ],
+      "total_links": 5,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "iOS",
+      "merge_from": [
+        "IO"
+      ],
+      "total_links": 5,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Programming Languages",
+      "merge_from": [
+        "Programming Language"
+      ],
+      "total_links": 5,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "CLI",
+      "merge_from": [
+        "cli"
+      ],
+      "total_links": 4,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Scalable",
+      "merge_from": [
+        "Scaler"
+      ],
+      "total_links": 4,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Pull Request",
+      "merge_from": [
+        "Pull Requests"
+      ],
+      "total_links": 4,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Online-shop",
+      "merge_from": [
+        "Online-shops"
+      ],
+      "total_links": 4,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Blog",
+      "merge_from": [
+        "Blogs"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Index",
+      "merge_from": [
+        "Indexing"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Agents",
+      "merge_from": [
+        "Agent"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Linting",
+      "merge_from": [
+        "Linter"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Release",
+      "merge_from": [
+        "Releases"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Go",
+      "merge_from": [
+        "go"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Frontier Models",
+      "merge_from": [
+        "Frontier Model"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Jobs",
+      "merge_from": [
+        "Job"
+      ],
+      "total_links": 3,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Container Runtime",
+      "merge_from": [
+        "Container Runtimes"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Source",
+      "merge_from": [
+        "Sources"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "S3",
+      "merge_from": [
+        "s3"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Http Api",
+      "merge_from": [
+        "Http Apis"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Basic",
+      "merge_from": [
+        "Basics"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Prompts",
+      "merge_from": [
+        "Prompt"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Web Crawler",
+      "merge_from": [
+        "Web Crawling"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Forks",
+      "merge_from": [
+        "Fork"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Dashboards",
+      "merge_from": [
+        "Dashboard"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "E-mails",
+      "merge_from": [
+        "E-mail"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Unit Tests",
+      "merge_from": [
+        "Unit Test"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Plans",
+      "merge_from": [
+        "Plan"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Event",
+      "merge_from": [
+        "Events"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Fixing",
+      "merge_from": [
+        "fix"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Studie",
+      "merge_from": [
+        "Studies"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Filesystem",
+      "merge_from": [
+        "Filesystems"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "app",
+      "merge_from": [
+        "Apps"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Generic",
+      "merge_from": [
+        "Generics"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Changelog",
+      "merge_from": [
+        "Changelogs"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Alternatives",
+      "merge_from": [
+        "Alternative"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Pthread",
+      "merge_from": [
+        "Pthreads"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Etfs",
+      "merge_from": [
+        "ETF"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Large Language Models",
+      "merge_from": [
+        "Large Language Model"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    },
+    {
+      "primary_tag": "Language Model",
+      "merge_from": [
+        "Language Models"
+      ],
+      "total_links": 2,
+      "tag_count": 2
+    }
+  ],
+  "violations": {
+    "single_link": [
+      "Fast",
+      "Llm Testing",
+      "Yen Carry Trade",
+      "Aktienm\u00e4rkte",
+      "Kursst\u00fcrze",
+      "Firefox Addon",
+      "Export Tabs",
+      "Urls",
+      "Titles",
+      "Step-by-step",
+      "Ki-plattform",
+      "Ki-chat",
+      "Ki-musik",
+      "Video-erstellung",
+      "Bilderstellung",
+      "Ai Analytics",
+      "Creative Arts",
+      "Business Finance",
+      "Gpts",
+      "Yeschat.ai",
+      "Ai Tools",
+      "Experience",
+      "Image Generator",
+      "Designers",
+      "Educators",
+      "Marketers",
+      "Substack",
+      "Publishers",
+      "Toolbx",
+      "Survey",
+      "Container Technologies",
+      "Platforms",
+      "Deploy",
+      "Linux Cli",
+      "Container Tool",
+      "Interactive Environment",
+      "System Access",
+      "AST",
+      "Reference Implementation",
+      "World",
+      "Podman Compose",
+      "Claude Api",
+      "Nordroute",
+      "Bad Feilnbach",
+      "Tegernsee",
+      "Schliersee",
+      "Indexing",
+      "Concepts",
+      "It-governance",
+      "Cobit"
+    ],
+    "german": [
+      "Aktienm\u00e4rkte",
+      "Kursst\u00fcrze",
+      "Gesch\u00e4ftsmodelle",
+      "Ausbildungspl\u00e4tze",
+      "Jobb\u00f6rse",
+      "Bundesagentur F\u00fcr Arbeit",
+      "K\u00fcnstliche Intelligenz",
+      "Kostenloser Api-schl\u00fcssel",
+      "Julia Kl\u00f6ckner",
+      "F\u00f6rdergelder",
+      "Politische Neutralit\u00e4t",
+      "Onleihe M\u00fcnchen",
+      "Ki-pl\u00e4ne",
+      "Verm\u00f6gensteuer",
+      "\u00d6ffentlich",
+      "Privatsph\u00e4re",
+      "Ma\u00dfnahmen",
+      "W\u00e4hlerschaft",
+      "Ssh-schl\u00fcssel",
+      "Funktionalit\u00e4t",
+      "Deb\u00fct",
+      "Ausf\u00fchrung",
+      "Produktivit\u00e4t",
+      "B\u00fccher",
+      "Unterst\u00fctzung",
+      "Quarant\u00e4ne",
+      "B\u00fccher Lentner",
+      "Jan B\u00f6hmermann",
+      "Mobilit\u00e4tsportal",
+      "M\u00f6belbausystem",
+      "Passwortgesch\u00fctzt",
+      "Gef\u00fchle Lesen",
+      "Verteidigungsf\u00e4higkeit",
+      "Geh\u00e4lter",
+      "M\u00fcnchen-venedig",
+      "M\u00fcnchen",
+      "Popul\u00e4rkultur",
+      "Vorw\u00e4rtsfehlerkorrektur",
+      "Daten\u00fcbertragung",
+      "T\u00fcv S\u00fcd",
+      "\u00dcbersetzung",
+      "20. Jahrhundert",
+      "Ki-gest\u00fctzter Voice-generator",
+      "\u00dcberarbeitung",
+      "S\u00fcdroute",
+      "Onlineh\u00e4ndler",
+      "Z\u00fcrich",
+      "H\u00f6hlenfunde",
+      "Gr\u00fcnen",
+      "Tech-milliard\u00e4r",
+      "Parteigr\u00fcndung",
+      "Pl\u00e4ne",
+      "B\u00fchnenoutfits",
+      "Mysteri\u00f6s",
+      "Vollst\u00e4ndig Verwalteter Service",
+      "Unterdr\u00fcckung",
+      "Mit License",
+      "\u00dcberblick Verlieren",
+      "Svensk Komposit\u00f6r",
+      "Popul\u00e4rmusik",
+      "Komplexit\u00e4t",
+      "Ver\u00e4nderung",
+      "1970er Jahre",
+      "1970er Jahre",
+      "Sexualit\u00e4t",
+      "\u00c4rztliche Versorgung",
+      "Allesk\u00f6nner",
+      "L\u00e4nder\u00fcbergreifend",
+      "Agentur F\u00fcr Arbeit",
+      "Nat\u00fcrliche Sprache",
+      "Modeh\u00e4ndler",
+      "Brachfl\u00e4chen",
+      "St\u00e4dte",
+      "Gr\u00fcne",
+      "Metoo-aff\u00e4re",
+      "Vorw\u00fcrfe",
+      "Schweine-bet\u00e4ubung",
+      "Gespr\u00e4ch",
+      "Grafikkartenverk\u00e4ufe",
+      "Estradas\u00e4nger",
+      "1920er",
+      "Tragikom\u00f6die",
+      "Russische S\u00e4ngerin",
+      "D\u00fcnsten",
+      "Ausgewogene K\u00fcche",
+      "Finanzm\u00e4rkte",
+      "Schn\u00e4ppchen",
+      "K\u00fcsten",
+      "K\u00f6lner Landgericht",
+      "Ungew\u00f6hnlicher Fall",
+      "Sch\u00e4den Regulieren",
+      "\u00d6ffentliche Auftraggeber",
+      "Tempor\u00e4re Cookies",
+      "S\u00fcdkorea",
+      "Pr\u00e4sidentenwahl",
+      "J\u00fcrgen Rose",
+      "Bundesb\u00fcrger",
+      "Ausstellungser\u00f6ffnung",
+      "St\u00e4dtische Galerie",
+      "30-j\u00e4hriges Bestehen",
+      "Flexibilit\u00e4t",
+      "Online-jobb\u00f6rsen",
+      "Technologien Und Trends",
+      "Abschl\u00e4ge",
+      "Mediterrane K\u00fcche",
+      "Kostenlose Getr\u00e4nke",
+      "Fr\u00fcher Anwender",
+      "Im Westen Nichts Neues",
+      "Bundestagspr\u00e4sidentin",
+      "Gr\u00fcne-jugend",
+      "Qualit\u00e4tsjournalismus",
+      "Hintergr\u00fcnde",
+      "Risikoma\u00dfe",
+      "M\u00fcnchner Band",
+      "Kurz & B\u00fcndig",
+      "Outdoor-aktivit\u00e4ten",
+      "Joe H\u00f6lzl",
+      "S\u00e4ngerin"
+    ],
+    "year_specific": [
+      "2025"
+    ]
+  }
+}
