@@ -13,11 +13,6 @@ In addition to preservation, Linkwarden provides a user-friendly reading and ann
 Linkwarden is also designed with collaboration in mind, enabling you to share links with the public and/or collaborate seamlessly with multiple users.
 
 - If you are technically stuck or unsure about the next step, ask for help.
-- cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
-- Tests should be pytest at ./tests (NOT at ./python/cocoindex_code_mcp_server/tests).
-- Tests should use pytest and pytest plugins only (i.e. don't use unittest).
-- You MUST use our own RAG (MCP server 'cocoindex-rag') each time before using grep or search.
-- Never try to start/stop our RAG MCP server, just ask, I will do it for you.
 - Use gw-memory to store and retrieve information about the codebase.
   + Tag all entries with 'linkwarden' to indicate they are related to the code MCP server.
   + After you have been started, it is a good idea to retrieve what's has been stored lately, so you have the latest context.

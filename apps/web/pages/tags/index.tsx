@@ -36,7 +36,6 @@ enum TagSort {
 }
 
 // Map frontend TagSort enum to backend sort/dir params
-const Page: NextPageWithLayout = () => {
 const mapSortToParams = (sort: TagSort): { sort: string; dir: string } => {
   switch (sort) {
     case TagSort.NameAZ:
@@ -59,7 +58,7 @@ const mapSortToParams = (sort: TagSort): { sort: string; dir: string } => {
   }
 };
 
-export default function Tags() {
+const Page: NextPageWithLayout = () => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = useState<TagSort>(TagSort.NameAZ);
   const [newTagModal, setNewTagModal] = useState(false);
