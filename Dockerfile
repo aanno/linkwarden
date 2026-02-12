@@ -39,6 +39,7 @@ COPY ./yarn.lock ./package.json ./
 RUN --mount=type=cache,sharing=locked,target=/usr/local/share/.cache/yarn \
     set -eux && \
     yarn workspaces focus linkwarden @linkwarden/web @linkwarden/worker && \
+    yarn create playwright && \
     # Install curl for healthcheck, and ca-certificates to prevent monolith from failing to retrieve resources due to invalid certificates
     apt-get update && \
     apt-get install -yqq --no-install-recommends curl ca-certificates && \

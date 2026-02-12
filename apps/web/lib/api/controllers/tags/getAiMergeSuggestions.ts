@@ -1,5 +1,5 @@
 import { prisma } from "@linkwarden/prisma";
-import { generateObject, LanguageModelV1 } from "ai";
+import { generateObject, LanguageModel } from "ai";
 import {
   createOpenAICompatible,
   OpenAICompatibleProviderSettings,
@@ -9,14 +9,14 @@ import { azure } from "@ai-sdk/azure";
 import { z } from "zod";
 import { anthropic } from "@ai-sdk/anthropic";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { createOllama } from "ollama-ai-provider";
+import { createOllama } from "ai-sdk-ollama";
 import { getTagMergeCandidates, TagCandidate, combinedProvider } from "./getAiMergeCandidates";
 
 // Function to concat /api with the base URL properly
 const ensureValidURL = (base: string, path: string) =>
   `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 
-const getAIModel = (): LanguageModelV1 => {
+const getAIModel = (): LanguageModel => {
   if (process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL) {
     let config: OpenAICompatibleProviderSettings = {
       baseURL:
@@ -38,15 +38,11 @@ const getAIModel = (): LanguageModelV1 => {
   if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_MODEL)
     return anthropic(process.env.ANTHROPIC_MODEL);
   if (process.env.NEXT_PUBLIC_OLLAMA_ENDPOINT_URL && process.env.OLLAMA_MODEL) {
-    const ollama = createOllama({
-      baseURL: ensureValidURL(
-        process.env.NEXT_PUBLIC_OLLAMA_ENDPOINT_URL,
-        "api"
-      ),
+    const ollamaChat = createOllama({
+        baseURL: process.env.NEXT_PUBLIC_OLLAMA_ENDPOINT_URL,
     });
-
-    return ollama(process.env.OLLAMA_MODEL, {
-      structuredOutputs: true,
+    return ollamaChat(process.env.OLLAMA_MODEL, {
+        structuredOutputs: true,
     });
   }
   if (process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_MODEL) {
@@ -54,7 +50,7 @@ const getAIModel = (): LanguageModelV1 => {
       apiKey: process.env.OPENROUTER_API_KEY,
     });
 
-    return openrouter(process.env.OPENROUTER_MODEL) as LanguageModelV1;
+    return openrouter(process.env.OPENROUTER_MODEL) as LanguageModel;
   }
   if (process.env.PERPLEXITY_API_KEY) {
     return perplexity(process.env.PERPLEXITY_MODEL || "sonar-pro");
