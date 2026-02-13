@@ -29,8 +29,7 @@
       "command": "pnpm",
       "args": [
         "dlx",
-        "supergateway",
-        "--sse",
+        "mcp-proxy",
         "http://host.docker.internal:3012/sse"
       ]
     },

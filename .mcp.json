@@ -25,15 +25,6 @@
         "http://localhost:3000/mcp"
       ]
     },
-    "gw-memory": {
-      "command": "pnpm",
-      "args": [
-        "dlx",
-        "supergateway",
-        "--sse",
-        "http://host.docker.internal:3012/sse"
-      ]
-    },
     "fetch": {
       "command": "uvx",
       "args": [
@@ -69,6 +60,10 @@
         "--streamableHttp",
         "http://localhost:3033/mcp"
       ]
+    },
+    "gw-memory": {
+      "type": "sse",
+      "url": "http://host.docker.internal:3012/sse"
     }
   }
 }
