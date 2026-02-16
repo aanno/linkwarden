@@ -334,7 +334,7 @@ const useAiMergeSuggestions = (): UseQueryResult<AiMergeSuggestionsResponse, Err
       const data = await response.json();
       return data.response;
     },
-    enabled: session.status === "authenticated",
+    enabled: session?.status === "authenticated",
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 };
