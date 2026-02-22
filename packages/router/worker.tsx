@@ -4,7 +4,7 @@ import { WorkerStats } from "@linkwarden/types/global";
 import { DeletePreservationsSchemaType } from "@linkwarden/lib/schemaValidation";
 
 const useWorker = () => {
-  const { status } = useSession();
+  const status = useSession()?.status ?? "loading";
 
   return useQuery({
     queryKey: ["worker"],

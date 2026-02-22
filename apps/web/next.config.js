@@ -18,7 +18,7 @@ const nextConfig = {
   env: {
     version,
   },
-  webpack(config) {
+  webpack(config, { isServer }) {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
