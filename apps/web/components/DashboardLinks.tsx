@@ -108,7 +108,7 @@ export function Card({ link, editMode, dashboardType }: Props) {
   const [linkModal, setLinkModal] = useState(false);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
+    let interval: ReturnType<typeof globalThis.setTimeout> | null = null;
 
     if (
       isVisible &&

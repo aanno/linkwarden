@@ -403,7 +403,7 @@ export default function Links({
   }, [editMode]);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
+    let interval: ReturnType<typeof globalThis.setTimeout> | null = null;
 
     if (
       links?.some(
