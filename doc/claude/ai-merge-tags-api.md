@@ -1,8 +1,8 @@
 # AI Merge Tags API Documentation
 
 **Date:** 2025-01-15
-**Version:** 2.0
-**Last Updated:** 2025-11-15
+**Version:** 2.1
+**Last Updated:** 2026-03-15
 **Status:** Fully Enhanced ✅
 
 ## Overview
@@ -16,6 +16,12 @@ The AI Merge Tags API provides intelligent tag merge suggestions and background 
 - Shared `performTagMerge()` function in `@linkwarden/lib`
 - Robust duplicate job handling with upsert logic
 - Optimistic UI updates on submission
+
+**Version 2.1 Changes:**
+- AI suggestions still require 2+ tags, but users may now submit a single-tag operation as a **rename** (deselect all but one tag in the UI)
+- `generateObject` switched from `output: "array"` to `output: "object"` with `{ suggestions: [...] }` wrapper schema for compatibility with models that don't support structured outputs / `responseFormat`
+- `QueueAiMergesSchema.tagIds` minimum changed from 2 → 1 to allow single-tag rename
+- Backend filter in `queueAiMerges.ts` updated from `>= 2` → `>= 1` accordingly
 
 ## Endpoints
 
@@ -115,9 +121,9 @@ Cookie: next-auth.session-token=...
 1. Validates AI provider is configured (`getAIModel()`)
 2. Fetches top 300 user tags sorted by link count (descending)
 3. Constructs AI prompt with tag data and quality rules
-4. Calls AI using Vercel AI SDK's `generateObject()`
+4. Calls AI using Vercel AI SDK's `generateObject()` — uses `output: "object"` with `MergeSuggestionsResponseSchema` (`{ suggestions: [...] }` wrapper) for compatibility with models that don't support `responseFormat` / structured outputs
 5. Maps tag names back to IDs and URLs
-6. Filters out invalid suggestions (tags not found, fewer than 2 tags)
+6. Filters out invalid suggestions (tags not found, or fewer than 2 resolved tags — AI suggestions always require 2+)
 7. **NEW:** Increments `aiSuggestionCount` for all tags appearing in suggestions (bulk update)
 8. Returns 5-50 suggestions
 
@@ -175,16 +181,18 @@ Cookie: next-auth.session-token=...
 {
   merges: Array<{
     newTagName: string;     // Max 50 characters, trimmed
-    tagIds: number[];       // Minimum 2 tags required
+    tagIds: number[];       // Minimum 1 tag (1 = rename, 2+ = merge)
   }>;                       // 1-100 merge operations allowed
 }
 ```
 
 **Validation:**
 - `merges` array: 1-100 items
-- Each merge must have at least 2 `tagIds`
+- Each merge must have at least 1 `tagId` — **1 tag = rename** (the tag is deleted and recreated with the new name); 2+ tags = merge
 - `newTagName` max length: 50 characters
 - All tags must exist and belong to the authenticated user
+
+> **Note:** AI-generated suggestions always contain 2+ tags. The single-tag case arises when the user deselects all but one tag in the UI, effectively using the AI merge page as a convenient rename tool.
 
 #### Response
 
@@ -204,7 +212,7 @@ Cookie: next-auth.session-token=...
 - **400 Bad Request** - Validation failed
   ```json
   {
-    "response": "Error: Must have at least 2 tags to merge [tagIds]"
+    "response": "Error: Array must contain at least 1 element(s) [merges.0.tagIds]"
   }
   ```
 

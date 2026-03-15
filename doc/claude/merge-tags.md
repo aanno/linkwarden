@@ -407,7 +407,7 @@ export default async function mergeTags(
      "newTagName": "Frontend Development"
    }
    ```
-   Effectively renames a single tag (merge with itself)
+   Renames a single tag: the old tag is deleted and a new one with the new name is created, all link associations preserved. Also achievable via the AI merge page (`/settings/ai-merge-tags`) by deselecting all but one tag in a suggestion.
 
 4. **Consolidate Variants**
    ```json

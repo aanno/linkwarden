@@ -31,10 +31,10 @@ export default async function queueAiMerges(
     const existingTagIds = new Set(existingTags.map((t) => t.id));
 
     // Filter merges to only include those with valid tags
-    // A merge/addition is valid if it has at least 2 existing tags
+    // 1 existing tag = rename; 2+ existing tags = merge
     const validMerges = merges.filter((merge) => {
       const validTagIds = merge.tagIds.filter((id) => existingTagIds.has(id));
-      return validTagIds.length >= 2;
+      return validTagIds.length >= 1;
     }).map((merge) => ({
       userId,
       newTagName: merge.newTagName,

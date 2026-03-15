@@ -82,23 +82,25 @@ Merge Suggestions to Make:
 - Language variations: "Übersetzung" → "Translation"
 - Low-value single-link tags: Consider removing if too specific
 
-Return 5-50 merge suggestions as a JSON array. Each suggestion should merge 2 or more tags.
+Return 5-50 merge suggestions wrapped in a JSON object with key "suggestions". Each suggestion should merge 2 or more tags.
 
 IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no explanation.
 
 Format:
-[
-  {
-    "newName": "AI",
-    "tags": ["ai", "Artificial Intelligence"],
-    "reason": "Case variation and abbreviation merge"
-  },
-  {
-    "newName": "Courses",
-    "tags": ["Course", "course"],
-    "reason": "Plural and case variation merge"
-  }
-]
+{
+  "suggestions": [
+    {
+      "newName": "AI",
+      "tags": ["ai", "Artificial Intelligence"],
+      "reason": "Case variation and abbreviation merge"
+    },
+    {
+      "newName": "Courses",
+      "tags": ["Course", "course"],
+      "reason": "Plural and case variation merge"
+    }
+  ]
+}
 
 Merge suggestions:`;
 
@@ -106,6 +108,10 @@ const MergeSuggestionSchema = z.object({
   newName: z.string(),
   tags: z.array(z.string()),
   reason: z.string(),
+});
+
+const MergeSuggestionsResponseSchema = z.object({
+  suggestions: z.array(MergeSuggestionSchema),
 });
 
 export default async function getAiMergeSuggestions(userId: number) {
@@ -142,12 +148,11 @@ export default async function getAiMergeSuggestions(userId: number) {
     const { object } = await generateObject({
       model: getAIModel(),
       prompt: tagMergeSuggestionsPrompt(tagData),
-      output: "array",
-      schema: MergeSuggestionSchema,
+      schema: MergeSuggestionsResponseSchema,
     });
 
     // Map tag names back to IDs and add URLs
-    const suggestions = object
+    const suggestions = object.suggestions
       .filter((suggestion) => {
         // Filter out suggestions with invalid schema (e.g., newNameName instead of newName)
         // This prevents one bad suggestion from breaking the entire response

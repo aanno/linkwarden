@@ -177,19 +177,20 @@ export default function AiMergeTags() {
       return;
     }
 
-    // Validate that each selected suggestion has at least 2 selected tags
+    // Validate that each selected suggestion has at least 1 selected tag
+    // (1 tag = rename; 2+ tags = merge)
     const invalidSuggestions: string[] = [];
     Array.from(selectedSuggestions).forEach((suggestionId) => {
       const selectedTags = selectedTagsPerSuggestion.get(suggestionId);
       const suggestion = suggestions.find(s => s.id === suggestionId);
-      if (!selectedTags || selectedTags.size < 2) {
+      if (!selectedTags || selectedTags.size < 1) {
         invalidSuggestions.push(suggestion ? getNewTagName(suggestionId, suggestion) : suggestionId);
       }
     });
 
     if (invalidSuggestions.length > 0) {
       toast.error(
-        `Each operation must have at least 2 tags selected. Please check suggestion(s): ${invalidSuggestions.join(", ")}`
+        `Each operation must have at least 1 tag selected. Please check suggestion(s): ${invalidSuggestions.join(", ")}`
       );
       return;
     }
