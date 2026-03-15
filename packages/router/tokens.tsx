@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AccessToken } from "@linkwarden/prisma/client";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 
 const useTokens = () => {
-  const status = useSession()?.status ?? "loading";
+  const status = useContext(SessionContext)?.status ?? "loading";
 
   return useQuery({
     queryKey: ["tokens"],

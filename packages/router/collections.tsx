@@ -3,7 +3,8 @@ import {
   CollectionIncludingMembersAndLinkCount,
   MobileAuth,
 } from "@linkwarden/types/global";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 import type toaster from "react-hot-toast";
 import { TFunction } from "next-i18next";
 import type { Alert as Alert_ } from "react-native";
@@ -78,7 +79,7 @@ const useCollections = (auth?: MobileAuth) => {
   let status: "loading" | "authenticated" | "unauthenticated";
 
   if (!auth) {
-    const session = useSession();
+    const session = useContext(SessionContext);
     status = session?.status ?? "loading";
   } else {
     status = auth?.status;

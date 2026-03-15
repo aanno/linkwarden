@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/compat/router";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 import useInitialData from "@/hooks/useInitialData";
 import { useUser } from "@linkwarden/router/user";
 
@@ -14,7 +15,7 @@ const REQUIRE_CC = process.env.NEXT_PUBLIC_REQUIRE_CC === "true";
 
 export default function AuthRedirect({ children }: Props) {
   const router = useRouter();
-  const status = useSession()?.status ?? "loading";
+  const status = useContext(SessionContext)?.status ?? "loading";
   const [shouldRenderChildren, setShouldRenderChildren] = useState(false);
   const { data: user } = useUser();
 

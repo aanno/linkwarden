@@ -2,8 +2,8 @@ import Modal from "../Modal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import { useDeleteUser } from "@linkwarden/router/users";
-import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useContext, useState } from "react";
+import { SessionContext } from "next-auth/react";
 import { useConfig } from "@linkwarden/router/config";
 import { Separator } from "../ui/separator";
 
@@ -33,7 +33,7 @@ export default function DeleteUserModal({ onClose, userId }: Props) {
     }
   };
 
-  const data = useSession()?.data;
+  const data = useContext(SessionContext)?.data;
 
   const { data: config } = useConfig();
 

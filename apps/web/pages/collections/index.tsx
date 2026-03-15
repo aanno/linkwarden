@@ -1,7 +1,7 @@
 import CollectionCard from "@/components/CollectionCard";
-import { ReactElement, useMemo, useState } from "react";
+import { ReactElement, useContext, useMemo, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
-import { useSession } from "next-auth/react";
+import { SessionContext } from "next-auth/react";
 import SortDropdown from "@/components/SortDropdown";
 import { Sort } from "@linkwarden/types/global";
 import NewCollectionModal from "@/components/ModalContent/NewCollectionModal";
@@ -23,7 +23,7 @@ const Page: NextPageWithLayout = () => {
   const { data: collections = [], isLoading } = useCollections();
   const [sortBy, setSortBy] = useState<Sort>(Sort.DateNewestFirst);
 
-  const data = useSession()?.data;
+  const data = useContext(SessionContext)?.data;
 
   const sortKey: Sort =
     typeof sortBy === "string" ? (Number(sortBy) as Sort) : sortBy;

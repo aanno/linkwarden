@@ -1,6 +1,7 @@
 import { RssSubscription } from "@linkwarden/prisma/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 
 interface RssSubscriptionWithCollectionName extends RssSubscription {
   collection: {
@@ -9,7 +10,7 @@ interface RssSubscriptionWithCollectionName extends RssSubscription {
 }
 
 const useRssSubscriptions = () => {
-  const status = useSession()?.status ?? "loading";
+  const status = useContext(SessionContext)?.status ?? "loading";
 
   return useQuery({
     queryKey: ["rss-subscriptions"],

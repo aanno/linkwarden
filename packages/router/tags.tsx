@@ -5,13 +5,13 @@ import {
   UseQueryResult,
   useInfiniteQuery,
 } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import {
   MobileAuth,
   TagIncludingLinkCount,
   PaginatedTags,
 } from "@linkwarden/types/global";
-import { useSession } from "next-auth/react";
+import { SessionContext } from "next-auth/react";
 import { ArchivalTagOption } from "@linkwarden/types/inputSelect";
 import {
   MergeTagsSchemaType,
@@ -39,7 +39,7 @@ const useTags = (
   let status: "loading" | "authenticated" | "unauthenticated";
 
   if (!auth) {
-    const session = useSession();
+    const session = useContext(SessionContext);
     status = session?.status ?? "loading";
   } else {
     status = auth?.status;
@@ -90,7 +90,7 @@ const useTagsPaginated = (
   let status: "loading" | "authenticated" | "unauthenticated";
 
   if (!auth) {
-    const session = useSession();
+    const session = useContext(SessionContext);
     status = session?.status ?? "loading";
   } else {
     status = auth?.status;
@@ -262,7 +262,7 @@ const useMergeTags = () => {
 const useTagsInfinite = (
   params: { sort?: string; dir?: string; search?: string } = {}
 ) => {
-  const session = useSession();
+  const session = useContext(SessionContext);
 
   const { data, ...rest } = useInfiniteQuery({
     queryKey: ["tags-infinite", params],

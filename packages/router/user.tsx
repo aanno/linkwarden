@@ -6,14 +6,15 @@ import {
 } from "@linkwarden/prisma/client";
 import { GetUserByIdResponse, MobileAuth } from "@linkwarden/types/global";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 
 const useUser = (auth?: MobileAuth) => {
   let status: "authenticated" | "loading" | "unauthenticated";
   let userId: string = "";
 
   if (!auth) {
-    const session = useSession();
+    const session = useContext(SessionContext);
     const data = session?.data;
     status = session?.status ?? "loading";
     userId = (data?.user as any)?.id;
@@ -86,8 +87,7 @@ const useUpdateUser = () => {
 
 const useUpdateUserPreference = () => {
   const queryClient = useQueryClient();
-  const sessionResult = useSession();
-  const session = sessionResult?.data;
+  const session = useContext(SessionContext)?.data;
 
   return useMutation({
     mutationFn: async (preference: UpdateUserPreferenceSchemaType) => {

@@ -4,14 +4,15 @@ import {
   useQueryClient,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 import { Highlight } from "@linkwarden/prisma/client";
 import { PostHighlightSchemaType } from "@linkwarden/lib/schemaValidation";
 
 const useGetLinkHighlights = (
   linkId: number
 ): UseQueryResult<Highlight[], Error> => {
-  const status = useSession()?.status ?? "loading";
+  const status = useContext(SessionContext)?.status ?? "loading";
 
   return useQuery({
     queryKey: ["highlights", linkId],

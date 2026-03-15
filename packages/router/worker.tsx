@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 import { WorkerStats } from "@linkwarden/types/global";
 import { DeletePreservationsSchemaType } from "@linkwarden/lib/schemaValidation";
 
 const useWorker = () => {
-  const status = useSession()?.status ?? "loading";
+  const status = useContext(SessionContext)?.status ?? "loading";
 
   return useQuery({
     queryKey: ["worker"],

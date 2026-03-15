@@ -5,14 +5,14 @@ import {
   useQuery,
   QueryKey,
 } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import {
   ArchivedFormat,
   LinkIncludingShortenedCollectionAndTags,
   LinkRequestQuery,
   MobileAuth,
 } from "@linkwarden/types/global";
-import { useSession } from "next-auth/react";
+import { SessionContext } from "next-auth/react";
 import {
   LinkArchiveActionSchemaType,
   PostLinkSchemaType,
@@ -63,7 +63,7 @@ const useFetchLinks = (params: string, auth?: MobileAuth) => {
   let status: "loading" | "authenticated" | "unauthenticated";
 
   if (!auth) {
-    const session = useSession();
+    const session = useContext(SessionContext);
     status = session?.status ?? "loading";
   } else {
     status = auth?.status;

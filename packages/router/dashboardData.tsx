@@ -1,13 +1,14 @@
 import { UpdateDashboardLayoutSchemaType } from "@linkwarden/lib/schemaValidation";
 import { MobileAuth } from "@linkwarden/types/global";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useContext } from "react";
+import { SessionContext } from "next-auth/react";
 
 const useDashboardData = (auth?: MobileAuth) => {
   let status: "loading" | "authenticated" | "unauthenticated";
 
   if (!auth) {
-    const session = useSession();
+    const session = useContext(SessionContext);
     status = session?.status ?? "loading";
   } else {
     status = auth?.status;

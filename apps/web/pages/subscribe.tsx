@@ -1,5 +1,5 @@
-import { signOut, useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { signOut, SessionContext } from "next-auth/react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/router";
 import CenteredForm from "@/components/CenteredForm";
@@ -18,7 +18,7 @@ const REQUIRE_CC = process.env.NEXT_PUBLIC_REQUIRE_CC === "true";
 export default function Subscribe() {
   const { t } = useTranslation();
   const [submitLoader, setSubmitLoader] = useState(false);
-  const session = useSession();
+  const session = useContext(SessionContext);
 
   const [plan, setPlan] = useState<Plan>(1);
 
