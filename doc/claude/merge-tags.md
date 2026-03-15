@@ -452,6 +452,48 @@ const mergeResult = await fetch('/api/v1/tags/merge', {
 });
 ```
 
+## AI Merge Candidate Providers
+
+**File:** `apps/web/lib/api/controllers/tags/getAiMergeCandidates.ts`
+
+Tag candidates fed to the AI are selected by pluggable *providers*. The production path uses `combinedProvider`.
+
+### Providers
+
+| Provider | Strategy | Notes |
+|---|---|---|
+| `topTagsByLinkCount` | Top N by link count descending | Simple baseline, no weighting |
+| `byAiSuggestionCount` | Weighted random: `ORDER BY -LN(RANDOM()) / aiSuggestionCount` | Higher count = more likely to be picked |
+| `byAiSuggestionCountCapped` | Same but weight capped at `maxWeight` | Prevents very high-count tags from dominating |
+| `byMedianDifference` | Weighted by distance from median count | Targets "middle" tags |
+| `uniformLowUsage` | Uniform random from tags with exactly 1 link | Cleanup candidates |
+| `combinedProvider` | 150 from capped + 150 from median + 150 from uniform, deduplicated | **Used in production** |
+
+### `aiSuggestionCount` Reset Mechanism
+
+Both `byAiSuggestionCount` and `byAiSuggestionCountCapped` track how many times each tag has appeared in AI suggestions via the `aiSuggestionCount` DB column. Without a reset, the same high-count tags would dominate every run.
+
+**Reset rule:** At the start of each provider call, any tag whose `aiSuggestionCount >= resetSuggestionCount` is reset to `0`. On the next run those tags start fresh and won't appear in the weighted query (which filters `aiSuggestionCount > 0`) until they accumulate new counts.
+
+**Default values:**
+
+| Parameter | `byAiSuggestionCount` | `byAiSuggestionCountCapped` |
+|---|---|---|
+| `maxWeight` | — | 20 |
+| `resetSuggestionCount` | 30 | 30 |
+
+**Constraint in `byAiSuggestionCountCapped`:** `effectiveReset = Math.max(resetSuggestionCount, maxWeight + 1)`. This guarantees every tag reaches the cap (and is treated as equally weighted for at least one round) before being reset. Example: with `maxWeight=20, resetSuggestionCount=30` → `effectiveReset=30`; with `maxWeight=20, resetSuggestionCount=15` → `effectiveReset=21`.
+
+### `combinedProvider` composition
+
+```
+byAiSuggestionCountCapped(userId, 150)   // maxWeight=20, resetSuggestionCount=30
+byMedianDifference(userId, 150)
+uniformLowUsage(userId, 150)
+→ deduplicate by tag ID (first occurrence wins)
+→ up to ~450 unique candidates
+```
+
 ## UI Integration
 
 ### Modal Component

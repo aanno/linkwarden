@@ -52,18 +52,43 @@ export const topTagsByLinkCount = async (
 };
 
 /**
+ * Reset aiSuggestionCount to 0 for all tags whose count has reached or exceeded
+ * resetSuggestionCount. Called at the start of the weighted providers so that
+ * over-suggested tags re-enter the "fresh" pool and don't dominate forever.
+ */
+const resetOversuggested = async (
+  userId: number,
+  resetSuggestionCount: number
+): Promise<void> => {
+  await prisma.tag.updateMany({
+    where: {
+      ownerId: userId,
+      aiSuggestionCount: { gte: resetSuggestionCount },
+    },
+    data: { aiSuggestionCount: 0 },
+  });
+};
+
+/**
  * Provider 1: Select n tags weighted by aiSuggestionCount
  * Tags with higher aiSuggestionCount have higher probability of being selected
  * Uses weighted random sampling: ORDER BY -LN(RANDOM()) / weight
  *
+ * Before sampling, resets aiSuggestionCount to 0 for any tag that has reached
+ * resetSuggestionCount. This prevents the same tags from dominating every run.
+ *
  * @param userId - The user ID to fetch tags for
  * @param limit - Number of tags to select (default: 300)
+ * @param resetSuggestionCount - Count at which a tag's counter is reset to 0 (default: 30)
  * @returns Array of tag candidates selected by weighted sampling
  */
 export const byAiSuggestionCount = async (
   userId: number,
-  limit: number = 300
+  limit: number = 300,
+  resetSuggestionCount: number = 30
 ): Promise<TagCandidate[]> => {
+  await resetOversuggested(userId, resetSuggestionCount);
+
   type QueryResult = {
     id: number;
     name: string;
@@ -98,16 +123,29 @@ export const byAiSuggestionCount = async (
  * Similar to Provider 1, but caps the weight at maxWeight
  * This prevents tags with very high counts from dominating the selection
  *
+ * Before sampling, resets aiSuggestionCount to 0 for any tag that has reached
+ * resetSuggestionCount. resetSuggestionCount is enforced to be > maxWeight so
+ * that every tag reaches the cap at least once before being reset.
+ *
  * @param userId - The user ID to fetch tags for
  * @param limit - Number of tags to select (default: 300)
- * @param maxWeight - Maximum weight cap (default: 10)
+ * @param maxWeight - Maximum weight cap (default: 20)
+ * @param resetSuggestionCount - Count at which a tag's counter is reset to 0 (default: 30, always > maxWeight)
  * @returns Array of tag candidates selected by capped weighted sampling
  */
 export const byAiSuggestionCountCapped = async (
   userId: number,
   limit: number = 300,
-  maxWeight: number = 10
+  maxWeight: number = 20,
+  resetSuggestionCount: number = 30
 ): Promise<TagCandidate[]> => {
+  // Guarantee the reset threshold is always strictly above the cap, so a tag
+  // must reach the cap (and thus be treated as equally weighted) for at least
+  // one round before being reset.
+  const effectiveReset = Math.max(resetSuggestionCount, maxWeight + 1);
+
+  await resetOversuggested(userId, effectiveReset);
+
   type QueryResult = {
     id: number;
     name: string;
@@ -252,7 +290,7 @@ export const combinedProvider = async (
 ): Promise<TagCandidate[]> => {
   // Fetch from all three providers in parallel
   const [cappedTags, medianTags, lowUsageTags] = await Promise.all([
-    byAiSuggestionCountCapped(userId, 150, 10),
+    byAiSuggestionCountCapped(userId, 150), // maxWeight=20, resetSuggestionCount=30 (defaults)
     byMedianDifference(userId, 150),
     uniformLowUsage(userId, 150),
   ]);
