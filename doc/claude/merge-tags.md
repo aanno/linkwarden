@@ -429,12 +429,15 @@ export default async function mergeTags(
 
 ### AI-Assisted Tag Merging Workflow
 
-For large-scale tag cleanup (see `doc/instructions/ai-merge-tags.md`):
+For large-scale tag cleanup (see `doc/instructions/ai-merge-tags.md` and `doc/claude/ai-merge-tags-api.md`):
 
 1. **Analyze** - Identify tags to merge using automated analysis
-2. **Rename** - Rename tags to follow `Xyz~1`, `Xyz~2` pattern
-3. **Merge** - Use this API to merge `Xyz~1`, `Xyz~2`, etc. into `Xyz`
-4. **Verify** - Check that all links are preserved correctly
+2. **Review** - Open `/settings/ai-merge-tags`; AI suggestions are cached indefinitely — they survive page navigation and are never replaced by background refetches, so you can take your time selecting
+3. **Rename** - Rename tags to follow `Xyz~1`, `Xyz~2` pattern
+4. **Merge** - Use this API to merge `Xyz~1`, `Xyz~2`, etc. into `Xyz`
+5. **Verify** - Check that all links are preserved correctly
+
+When the suggestion list empties (all accepted or submitted), the page auto-fetches a fresh batch.
 
 Example merge for AI-identified duplicates:
 ```typescript

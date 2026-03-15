@@ -1,5 +1,5 @@
 import SettingsLayout from "@/layouts/SettingsLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "next-i18next";
 import getServerSideProps from "@/lib/client/getServerSideProps";
@@ -39,14 +39,19 @@ export default function AiMergeTags() {
 
   const suggestions = data?.suggestions || [];
 
-  // CRITICAL: Clear all user selections when suggestions change
-  // This prevents dangerous state where selections point to wrong suggestions
+  // Auto-refetch when suggestions hit 0 (e.g. after the user accepts all suggestions).
+  // Guard with a ref so we don't loop if the API itself returns 0 valid suggestions.
+  const autoRefetchedOnEmpty = useRef(false);
   useEffect(() => {
-    setSelectedSuggestions(new Set());
-    setSelectedTagsPerSuggestion(new Map());
-    setCustomTagNames(new Map());
-    setAdditionalTagMode(new Map());
-  }, [data]); // Re-run when data changes (new suggestions loaded)
+    if (data !== undefined && !isLoading && !isFetching) {
+      if (suggestions.length === 0 && !autoRefetchedOnEmpty.current) {
+        autoRefetchedOnEmpty.current = true;
+        refetch();
+      } else if (suggestions.length > 0) {
+        autoRefetchedOnEmpty.current = false;
+      }
+    }
+  }, [data, isLoading, isFetching, suggestions.length]);
 
   const toggleSuggestion = (suggestionId: string, suggestion: MergeSuggestion) => {
     setSelectedSuggestions((prev) => {
@@ -162,8 +167,7 @@ export default function AiMergeTags() {
   };
 
   const handleRefresh = async () => {
-    // FEATURE #2: Use query's built-in isFetching state instead of local state
-    // This ensures refresh state persists even if user navigates away
+    autoRefetchedOnEmpty.current = false; // Allow auto-refetch-on-empty after a manual refresh
     setSelectedSuggestions(new Set());
     setSelectedTagsPerSuggestion(new Map());
     setCustomTagNames(new Map());

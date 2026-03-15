@@ -22,6 +22,8 @@ The AI Merge Tags API provides intelligent tag merge suggestions and background 
 - `generateObject` switched from `output: "array"` to `output: "object"` with `{ suggestions: [...] }` wrapper schema for compatibility with models that don't support structured outputs / `responseFormat`
 - `QueueAiMergesSchema.tagIds` minimum changed from 2 → 1 to allow single-tag rename
 - Backend filter in `queueAiMerges.ts` updated from `>= 2` → `>= 1` accordingly
+- **Suggestions are now stable during selection**: `useAiMergeSuggestions` uses `staleTime: Infinity`, `refetchOnMount: false`, `refetchOnWindowFocus: false` — no background refetches can discard in-progress selections; suggestions survive page navigation and are only refreshed on explicit user action or when the list hits 0
+- Auto-refresh when suggestion list reaches 0 (with loop-guard ref)
 
 ## Endpoints
 
@@ -307,7 +309,7 @@ enum TagMergeJobStatus {
 #### useAiMergeSuggestions()
 
 ```typescript
-const { data, isLoading, error, refetch } = useAiMergeSuggestions();
+const { data, isLoading, error, refetch, isFetching } = useAiMergeSuggestions();
 
 // data shape:
 {
@@ -325,9 +327,14 @@ const { data, isLoading, error, refetch } = useAiMergeSuggestions();
 ```
 
 **Features:**
-- Cached for 5 minutes (`staleTime: 5 * 60 * 1000`)
+- `staleTime: Infinity` — cached suggestions never auto-expire; data only changes on an explicit `refetch()` call (no background refresh mid-selection)
+- `refetchOnMount: false` — navigating away and back reuses cached suggestions
+- `refetchOnWindowFocus: false` — switching browser tabs does not trigger a refetch
 - Only runs when authenticated
 - Query key: `["ai-merge-suggestions"]`
+
+**Why `staleTime: Infinity`?**
+The AI generation call is expensive (LLM round-trip, ~60 s). Accidentally re-fetching while the user is mid-selection would overwrite their work. The user has an explicit *Refresh* button for when they want new suggestions.
 
 #### useSubmitAiMerges()
 
@@ -354,11 +361,18 @@ await submitMerges.mutateAsync({
 - Select/deselect all functionality
 - Shows total link counts per merge
 - Visual feedback for selection state
-- Refresh button to regenerate suggestions
+- Refresh button to regenerate suggestions (only way to get new suggestions while list is non-empty)
+- Auto-refresh when suggestion list reaches 0 — fires a single `refetch()` automatically; a `useRef` guard (`autoRefetchedOnEmpty`) prevents an infinite loop if the API keeps returning 0 valid suggestions
+- Selections (checked suggestions, per-suggestion tag choices, custom names) survive page navigation because `useAiMergeSuggestions` never background-refetches
 - Loading and error states
 - Success toast notifications
 
 **Path:** `/settings/ai-merge-tags`
+
+**Selection stability:** The previous implementation had a `useEffect([data])` that cleared all selections whenever `data` changed — a source of race conditions when React Query did a background refetch. This effect was removed. Selections are now cleared only at the three points where it is intentional:
+1. `handleRefresh` — user explicitly clicks Refresh
+2. `handleSubmit` — after successfully queueing merges
+3. Auto-refetch-on-empty — fires only when there are 0 suggestions (nothing to clear)
 
 ---
 

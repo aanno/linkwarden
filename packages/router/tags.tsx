@@ -335,7 +335,12 @@ const useAiMergeSuggestions = (): UseQueryResult<AiMergeSuggestionsResponse, Err
       return data.response;
     },
     enabled: session?.status === "authenticated",
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    // Never auto-stale: suggestions only change when the user explicitly refreshes.
+    // This prevents background refetches from wiping selections mid-review and
+    // ensures cached suggestions survive page navigation.
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
 
