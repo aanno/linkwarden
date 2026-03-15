@@ -321,7 +321,7 @@ type AiMergeSuggestionsResponse = {
 };
 
 const useAiMergeSuggestions = (): UseQueryResult<AiMergeSuggestionsResponse, Error> => {
-  const session = useSession();
+  const session = useContext(SessionContext);
 
   return useQuery({
     queryKey: ["ai-merge-suggestions"],

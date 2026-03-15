@@ -14,7 +14,13 @@ const nextConfig = {
 
     minimumCacheTTL: 10,
   },
-  transpilePackages: ["@linkwarden/prisma"],
+  transpilePackages: [
+    "@linkwarden/filesystem",
+    "@linkwarden/lib",
+    "@linkwarden/prisma",
+    "@linkwarden/router",
+    "@linkwarden/types",
+  ],
   env: {
     version,
   },
@@ -23,6 +29,12 @@ const nextConfig = {
       ...config.resolve.fallback,
       fs: false,
     };
+
+    // Resolve symlinks to their symlink location (not the real path).
+    // This ensures workspace packages (e.g. @linkwarden/router) resolve
+    // peer dependencies (e.g. next-auth) from apps/web/node_modules
+    // rather than from the package's own directory where they aren't installed.
+    config.resolve.symlinks = false;
 
     return config;
   },
