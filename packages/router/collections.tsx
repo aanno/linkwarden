@@ -7,7 +7,12 @@ import { useContext } from "react";
 import { SessionContext } from "next-auth/react";
 import type toaster from "react-hot-toast";
 import { TFunction } from "next-i18next";
-import type { Alert as Alert_ } from "react-native";
+// Minimal Alert interface matching react-native's Alert.alert() signature.
+// Defined locally so packages/router has no hard dependency on react-native
+// (which is only installed when the mobile workspace is included).
+type Alert_ = {
+  alert(title: string, message?: string, buttons?: any[], options?: any): void;
+};
 
 const getCollectionSubtreeIds = (collections: any[] = [], rootId: number) => {
   const byParent = new Map<number, number[]>();
@@ -186,7 +191,7 @@ const useDeleteCollection = ({
   t,
 }: {
   auth?: MobileAuth;
-  Alert?: typeof Alert_;
+  Alert?: Alert_;
   toast?: typeof toaster;
   t?: TFunction;
 }) => {
