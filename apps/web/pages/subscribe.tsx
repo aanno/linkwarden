@@ -40,12 +40,12 @@ export default function Subscribe() {
 
   useEffect(() => {
     if (
-      session.status === "authenticated" &&
+      session?.status === "authenticated" &&
       user?.id &&
       (user?.subscription?.active || user?.parentSubscription?.active)
     )
       router.push("/dashboard");
-  }, [session.status, user]);
+  }, [session?.status, user]);
 
   async function submit() {
     setSubmitLoader(true);
