@@ -11,6 +11,7 @@ import importFromPocket from "@/lib/api/controllers/migration/importFromPocket";
 export const config = {
   api: {
     bodyParser: false,
+    responseLimit: false,
   },
 };
 
