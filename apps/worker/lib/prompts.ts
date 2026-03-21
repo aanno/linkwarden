@@ -78,7 +78,7 @@ Merge Suggestions to Make:
 - Language variations: "Übersetzung" → "Translation"
 - Low-value single-link tags: Consider removing if too specific
 
-Return 5-50 merge suggestions as a JSON array. Each suggestion should merge 2 or more tags.
+Return 5-50 merge suggestions as a JSON array. Each suggestion should merge 2-8 tags. NEVER put more than 8 tags in a single suggestion — make multiple focused suggestions instead of one large catch-all.
 
 IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no explanation.
 

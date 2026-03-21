@@ -82,7 +82,7 @@ Merge Suggestions to Make:
 - Language variations: "Übersetzung" → "Translation"
 - Low-value single-link tags: Consider removing if too specific
 
-Return 5-50 merge suggestions wrapped in a JSON object with key "suggestions". Each suggestion should merge 2 or more tags.
+Return 5-50 merge suggestions wrapped in a JSON object with key "suggestions". Each suggestion should merge 2-8 tags. NEVER put more than 8 tags in a single suggestion — make multiple focused suggestions instead of one large catch-all.
 
 IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no explanation.
 
@@ -106,7 +106,7 @@ Merge suggestions:`;
 
 const MergeSuggestionSchema = z.object({
   newName: z.string(),
-  tags: z.array(z.string()),
+  tags: z.array(z.string()).min(2).max(10),
   reason: z.string(),
 });
 
@@ -149,6 +149,7 @@ export default async function getAiMergeSuggestions(userId: number) {
       model: getAIModel(),
       prompt: tagMergeSuggestionsPrompt(tagData),
       schema: MergeSuggestionsResponseSchema,
+      maxTokens: 4000,
     });
 
     // Map tag names back to IDs and add URLs
