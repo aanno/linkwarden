@@ -149,7 +149,7 @@ export default async function getAiMergeSuggestions(userId: number) {
       model: getAIModel(),
       prompt: tagMergeSuggestionsPrompt(tagData),
       schema: MergeSuggestionsResponseSchema,
-      maxTokens: 4000,
+      maxOutputTokens: 4000,
     });
 
     // Map tag names back to IDs and add URLs
